@@ -11,14 +11,18 @@
     "deploy": "node apps/preview/deploy.mjs",
     "deploy:vercel": "npx --yes vercel@64 build && npx --yes vercel@64 deploy --prebuilt",
     "deploy:netlify": "npx --yes netlify-cli@27 deploy --build",
-    "deploy:cloudflare": "npm run build && npx --yes wrangler@4 pages deploy dist --project-name rolling"
+    "deploy:cloudflare": "npm run build && npx --yes wrangler@4 pages deploy dist --project-name rolling",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@videojs/html": "10.4.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@base-ui/react": "^1.6.0",
     "@heroicons/react": "^2.2.0",
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -30,6 +34,7 @@
     "react-dom": "^19.3.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
-    "vite": "^8.3.4"
+    "vite": "^8.3.4",
+    "vitest": "^5.1.0"
   }
 }
