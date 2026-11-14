@@ -4,9 +4,19 @@ REMIX_LOG.md
 docs/
 
 # Dependencies and build output
-node_modules/
-dist/
-.vercel/
-.netlify/
+node_modules
+dist
+*.local
 *.log
 .DS_Store
+test-results/
+playwright-report/
+
+# Hosting CLIs keep their project links here.
+.vercel
+.netlify
+.wrangler
+
+# Local agent guides from the scaffold
+CLAUDE.md
+AGENTS.md
