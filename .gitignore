@@ -1,0 +1,12 @@
+# Private working notes: never publish
+HANDOFF.md
+REMIX_LOG.md
+docs/
+
+# Dependencies and build output
+node_modules/
+dist/
+.vercel/
+.netlify/
+*.log
+.DS_Store
