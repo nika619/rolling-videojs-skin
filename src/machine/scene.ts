@@ -25,7 +25,7 @@ import {
 } from 'three';
 
 import { type Activity, FRAME_WINDOW, frameGap, nextQuality, PIXEL_RATIO_CAP, PLAYBACK_FRAME_MS, type Quality } from './gate';
-import { PITCH, type Stage, stage as stageOf } from './layout';
+import { PITCH, railShape, type Stage, stage as stageOf } from './layout';
 import { type FilmLight, LAMP, luminance, type Rgb, sameLight, smoothLight } from './light';
 import { filmUniforms, Materials, readPalette } from './materials';
 import { CONTROLS, type ControlName, type Layout, type MachineState, measure, readState } from './measure';
@@ -200,6 +200,9 @@ export function mount(options: MountOptions): Machine {
     if (layout.bands.width < 2 || layout.bands.height < 2) return;
     stage = stageOf(layout.bands, layout.filmRows);
     size();
+    // The ruler stays in the DOM, burned into the beam: it moves down onto the beam's face as drawn.
+    const shift = layout.rail ? `${(railShape(layout.rail, stage, layout.bands.height).faceRow - layout.rail.pivot).toFixed(2)}px` : '';
+    if (dock.style.getPropertyValue('--rl-beam-shift') !== shift) dock.style.setProperty('--rl-beam-shift', shift);
 
     const { width } = layout.bands;
     const depth = -stage.lip.z + 40;
@@ -363,13 +366,17 @@ export function mount(options: MountOptions): Machine {
   });
   observer.observe(dock, { attributes: true, childList: true, characterData: true, subtree: true });
 
-  // The edition (wood tones, accent) and the tier are set on the player itself.
-  const skinObserver = new MutationObserver(() => {
+  // The edition (wood tones, accent) and the tier are set on the player itself. So are the film's colours,
+  // many times a second, by the film eye: those reach the machine through setLight, never as a rebuild.
+  const withoutFilm = (style: string | null): string => (style ?? '').replace(/--rl-film-[a-z]+:[^;]*;?/g, '').trim();
+  const skinObserver = new MutationObserver((records) => {
+    const own = withoutFilm(container.getAttribute('style'));
+    if (records.every((record) => record.attributeName === 'style' && withoutFilm(record.oldValue) === own)) return;
     materials.setPalette(readPalette(container));
     layoutDirty = true;
     stir();
   });
-  skinObserver.observe(container, { attributes: true, attributeFilter: ['data-edition', 'data-tier', 'style', 'class', 'dir'] });
+  skinObserver.observe(container, { attributes: true, attributeOldValue: true, attributeFilter: ['data-edition', 'data-tier', 'style', 'class', 'dir'] });
 
   const resize = new ResizeObserver(() => {
     layoutDirty = true;
@@ -492,6 +499,7 @@ export function mount(options: MountOptions): Machine {
       materials.dispose();
       renderer.dispose();
       canvas.remove();
+      dock.style.removeProperty('--rl-beam-shift');
     },
   };
 }
