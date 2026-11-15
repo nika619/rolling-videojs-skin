@@ -900,17 +900,30 @@
     translate: -50% 88%;
   }
 
-  /* Before the film starts, only the lever is lit. */
-  .rl-dock:not([data-started]) .rl-lever-arm::after {
+  /* Before the film starts, only the lever is lit: a halo behind its knob breathes. Opacity alone is animated, so the
+     compositor runs it and a player waiting to be started repaints nothing. */
+  .rl-lever-arm::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 50%;
+    bottom: 0;
+    inline-size: calc(var(--u) * 4.25);
+    block-size: calc(var(--u) * 4.25);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 5px color-mix(in oklab, var(--rl-accent) 55%, transparent),
+      0 0 14px 4px var(--rl-accent);
+    opacity: 0;
+    translate: -50% 12%;
+  }
+
+  .rl-dock:not([data-started]) .rl-lever-arm::before {
     animation: rl-lit 1.8s ease-in-out infinite;
   }
 
   @keyframes rl-lit {
     50% {
-      box-shadow:
-        0 0 0 1.5px var(--rl-outline),
-        0 0 0 5px color-mix(in oklab, var(--rl-accent) 55%, transparent),
-        0 0 14px 4px var(--rl-accent);
+      opacity: 1;
     }
   }
 
@@ -1682,22 +1695,10 @@
     translate: 0 var(--rl-beam-shift, 0px);
   }
 
-  /* Before the film starts only the lever is lit: a glow on its knob, drawn here so the canvas can rest. */
+  /* The knob is drawn in 3D; the halo that lights it before the film starts stays in CSS, so the canvas can rest. */
   .rolling[data-machine="3d"] .rl-lever-arm::after {
     background: none;
     box-shadow: none;
-  }
-
-  .rolling[data-machine="3d"] .rl-dock:not([data-started]) .rl-lever-arm::after {
-    animation-name: rl-lit-glow;
-  }
-
-  @keyframes rl-lit-glow {
-    50% {
-      box-shadow:
-        0 0 0 4px color-mix(in oklab, var(--rl-accent) 45%, transparent),
-        0 0 16px 6px var(--rl-accent);
-    }
   }
 
   /* A drawer comes out toward the viewer, which is up the screen. */
