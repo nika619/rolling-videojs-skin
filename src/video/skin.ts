@@ -1,5 +1,6 @@
-import '../styles/video/scaffold.css';
+import '../styles/video/rolling.css';
 import './skin.css';
+import './rolling.css';
 import '@videojs/html/i18n';
 import '@videojs/html/ui/container';
 import '@videojs/html/ui/poster';
@@ -25,6 +26,7 @@ import '@videojs/html/ui/pip-button';
 import '@videojs/html/ui/fullscreen-button';
 import '@videojs/html/ui/seek-button';
 import '@videojs/html/ui/play-button';
+import '@videojs/html/ui/playback-rate-button';
 import '@videojs/html/ui/time-slider';
 import '@videojs/html/ui/time-slider-chapters';
 import '@videojs/html/ui/slider-track';
@@ -62,6 +64,8 @@ import '@videojs/html/ui/status-indicator';
 import '@videojs/html/ui/status-indicator-value';
 import '@videojs/html/ui/seek-indicator';
 import '@videojs/html/ui/seek-indicator-value';
+import '../rail/rolling-rail';
+import '../machine/rolling-machine';
 import { registerIcons } from '@videojs/html/icons';
 import {
   airPlayEnterIcon as airPlayEnterIconScaffold,
@@ -90,7 +94,7 @@ import {
   volumeOffIcon as volumeOffIconScaffold,
 } from '@videojs/html/icons/scaffold';
 
-registerIcons('scaffold', {
+registerIcons('rolling', {
   'airplay-enter': airPlayEnterIconScaffold,
   'airplay-exit': airPlayExitIconScaffold,
   'captions-off': captionsOffIconScaffold,
