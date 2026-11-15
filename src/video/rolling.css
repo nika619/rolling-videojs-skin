@@ -1,0 +1,1773 @@
+/*
+ * Rolling: the flat machine. Layout and look for every size tier.
+ * The DOM laid out here is the layout truth; the 3D machine is placed over these rectangles.
+ * Menus, tooltips, dialogs and indicators keep their mechanics from skin.css and take their look from the tokens below.
+ */
+@layer rolling {
+  .media-skin.rolling {
+    --u: var(--media-spacing);
+
+    /* Wood. Walnut is the dark edition, maple the light one: two presets of the same four properties. */
+    --rl-wood: var(--rolling-wood, #4d2f1d);
+    --rl-wood-light: var(--rolling-wood-light, #74492b);
+    --rl-wood-deep: var(--rolling-wood-deep, #2a170c);
+    --rl-beam: var(--rolling-beam, #e6cb94);
+    --rl-outline: #130a04;
+    --rl-brass-light: #f3dc95;
+    --rl-brass: #d1ab54;
+    --rl-brass-deep: #8a6420;
+    --rl-ink: #24150a;
+    --rl-cream: #f6ead2;
+    --rl-dark: #150d07;
+    --rl-burn: #3a1d09;
+    --rl-accent: var(--media-accent-color, #ff6a2c);
+    --rl-accent-ink: var(--media-accent-text-color, #1f0d03);
+    --rl-edge: var(--media-border-color, rgb(0 0 0 / 0.55));
+    --rl-radius: var(--media-border-radius, 14px);
+    --rl-felt: #241a15;
+    --rl-ring-in: #fff7df;
+    --rl-ring-out: #0c0603;
+    --rl-serif: var(
+      --media-font-family,
+      ui-serif,
+      "Iowan Old Style",
+      "Palatino Linotype",
+      Palatino,
+      "Book Antiqua",
+      Georgia,
+      serif
+    );
+    --rl-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Menlo, Consolas, monospace;
+    --rl-spring: cubic-bezier(0.3, 1.5, 0.5, 1);
+    --rl-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='220'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.00625 0.4' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.11 0 0 0 0 0.05 0 0 0 0 0.01 0 0 0 -1.9 1.0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+    --rl-brass-face: linear-gradient(172deg, var(--rl-brass-light) 0%, var(--rl-brass) 62%, #c69f48 100%);
+    --rl-plate-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.55), inset 0 -1px 0 rgb(80 50 8 / 0.5), 0 0 0 1.5px var(--rl-outline),
+      0 2px 3px rgb(0 0 0 / 0.45);
+    --rl-key-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.55), 0 0 0 1.5px var(--rl-outline), 0 3px 0 1.5px var(--rl-outline),
+      0 6px 7px -1px rgb(0 0 0 / 0.5);
+    --rl-key-shadow-down:
+      inset 0 1px 0 rgb(255 255 255 / 0.4), 0 0 0 1.5px var(--rl-outline), 0 1px 0 1.5px var(--rl-outline),
+      0 2px 3px -1px rgb(0 0 0 / 0.5);
+
+    /* Sizes: the XL tier. Smaller tiers override these below. */
+    --rl-pad: calc(var(--u) * 4);
+    --rl-gap: calc(var(--u) * 2.5);
+    --rl-key: calc(var(--u) * 12);
+    --rl-icon: calc(var(--u) * 5.5);
+    --rl-lip-h: calc(var(--u) * 7);
+    --rl-rail-h: calc(var(--u) * 17.5);
+    --rl-bench-h: calc(var(--u) * 18);
+    --rl-marble: calc(var(--u) * 6.5);
+    --rl-beam-h: calc(var(--u) * 5);
+    --rl-over: calc(var(--u) * 5);
+    --rl-y: calc(50% + var(--u) * 0.75);
+
+    /* Tokens read by the popup, menu, dialog and indicator styles in skin.css. */
+    --media-foreground: var(--rl-cream);
+    --media-background: transparent;
+    --media-accent: var(--rl-accent);
+    --media-accent-foreground: var(--rl-accent-ink);
+    --media-primary: var(--rl-accent);
+    --media-primary-foreground: var(--rl-accent-ink);
+    --media-popover: var(--rl-felt);
+    --media-popover-foreground: var(--rl-cream);
+    --media-muted: rgb(255 255 255 / 0.16);
+    --media-ring: var(--rl-ring-in);
+    --media-button-highlight: rgb(255 255 255 / 0.14);
+    --media-video-border-radius: var(--rl-radius);
+    --media-popup-radius: calc(var(--u) * 1.5);
+    --media-menu-item-radius: calc(var(--u) * 0.75);
+    --media-dialog-radius: calc(var(--u) * 2);
+    --media-control-radius: calc(var(--u) * 1.5);
+    --media-tooltip-side-offset: calc(var(--u) * 3);
+    --media-popover-side-offset: calc(var(--u) * 3);
+    --media-popover-boundary-offset: calc(var(--u) * 2);
+
+    container: media-root rolling / inline-size;
+    display: grid;
+    grid-template: "film" auto "dock" auto / minmax(0, 1fr);
+    height: auto;
+    /* A host or the workbench sizes the skin box; here that ratio belongs to the film, and the dock adds its own height. */
+    aspect-ratio: auto !important;
+    font-family: var(--rl-serif);
+    font-size: calc(var(--u) * 3.25);
+    color: var(--rl-cream);
+    background: var(--rl-wood-deep);
+    border-radius: var(--rl-radius);
+    box-shadow: 0 0 0 1px var(--rl-edge);
+    isolation: isolate;
+  }
+
+  @supports (color: light-dark(red, red)) {
+    .media-skin.rolling {
+      --rl-wood: var(--rolling-wood, light-dark(#c99f66, #4d2f1d));
+      --rl-wood-light: var(--rolling-wood-light, light-dark(#dfbd88, #74492b));
+      --rl-wood-deep: var(--rolling-wood-deep, light-dark(#9c733f, #2a170c));
+      --rl-beam: var(--rolling-beam, light-dark(#f6e9c6, #e6cb94));
+    }
+  }
+
+  /* Pin the edition whatever the page's colour scheme. */
+  .media-skin.rolling[data-edition="walnut"] {
+    color-scheme: dark;
+  }
+
+  .media-skin.rolling[data-edition="maple"] {
+    color-scheme: light;
+  }
+
+  /* ---------- The film ---------- */
+
+  .media-skin.rolling > * {
+    grid-area: film;
+    min-inline-size: 0;
+  }
+
+  /* The media element comes first in the template. It is the one thing in the film cell that takes up room. */
+  .media-skin.rolling > :first-child {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: var(--rolling-ratio, var(--preview-player-ratio, 16 / 9));
+    background: #000;
+    border-radius: 0;
+  }
+
+  .rolling > media-error-dialog {
+    position: absolute;
+    inset: 0;
+    display: block;
+    pointer-events: none;
+  }
+
+  .rolling > media-error-dialog > * {
+    pointer-events: auto;
+  }
+
+  .rolling > rolling-machine {
+    display: none;
+  }
+
+  .rl-waiting {
+    place-self: center;
+    z-index: 2;
+    display: block;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 200ms;
+  }
+
+  .rl-waiting[data-visible] {
+    opacity: 1;
+  }
+
+  .rl-waiting-ball,
+  .rl-tray-marble {
+    display: block;
+    inline-size: calc(var(--u) * 10);
+    block-size: calc(var(--u) * 10);
+    border-radius: 50%;
+    background:
+      conic-gradient(
+        from 20deg,
+        rgb(10 14 18 / 0.45) 0 1.6%,
+        transparent 1.6% 33.33%,
+        rgb(10 14 18 / 0.45) 33.33% 34.93%,
+        transparent 34.93% 66.66%,
+        rgb(10 14 18 / 0.45) 66.66% 68.26%,
+        transparent 68.26%
+      ),
+      radial-gradient(circle at 34% 27%, #fff 0 5%, #edf1f4 13%, #a9b4bd 42%, #57626c 74%, #262d33 100%);
+    box-shadow:
+      0 0 0 1.5px var(--rl-outline),
+      0 6px 14px rgb(0 0 0 / 0.6);
+  }
+
+  .rl-waiting[data-visible] .rl-waiting-ball {
+    animation: rl-spin 0.9s linear infinite;
+  }
+
+  @keyframes rl-spin {
+    to {
+      rotate: 1turn;
+    }
+  }
+
+  /* ---------- The dock ---------- */
+
+  .rolling > .rl-dock {
+    grid-area: dock;
+    position: relative;
+    z-index: 3;
+    display: block;
+    color: var(--rl-cream);
+    background: var(--rl-wood);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .rl-dock > media-tooltip-group {
+    display: block;
+  }
+
+  .rl-sr {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    margin: -1px;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+
+  /* Tape lip */
+
+  .rl-lip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: calc(var(--u) * 3);
+    block-size: var(--rl-lip-h);
+    padding-inline: var(--rl-pad);
+    background:
+      var(--rl-grain) 0 0 / 640px 220px,
+      linear-gradient(var(--rl-wood-light), var(--rl-wood));
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.22),
+      inset 0 -1px 0 rgb(0 0 0 / 0.5);
+  }
+
+  .rl-nameplate {
+    flex: 0 1 auto;
+    max-inline-size: 44%;
+    overflow: hidden;
+    padding-inline: calc(var(--u) * 4);
+    font: 600 calc(var(--u) * 2.9) / calc(var(--u) * 4.75) var(--rl-serif);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--rl-ink);
+    text-shadow: 0 1px 0 rgb(255 255 255 / 0.4);
+    background:
+      radial-gradient(circle at calc(var(--u) * 1.75) 50%, var(--rl-brass-deep) 0 1.5px, transparent 2.2px),
+      radial-gradient(circle at calc(100% - var(--u) * 1.75) 50%, var(--rl-brass-deep) 0 1.5px, transparent 2.2px),
+      var(--rl-brass-face);
+    border-radius: 2px;
+    box-shadow: var(--rl-plate-shadow);
+  }
+
+  .rl-nameplate:empty {
+    display: none;
+  }
+
+  /* The slot the caption tape runs in. */
+  .rl-tape {
+    flex: 1;
+    block-size: 3px;
+    background: var(--rl-dark);
+    border-radius: 2px;
+    box-shadow:
+      inset 0 1px 1px rgb(0 0 0 / 0.9),
+      0 1px 0 rgb(255 255 255 / 0.2);
+  }
+
+  /* Rail tier */
+
+  .rl-rail {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    block-size: var(--rl-rail-h);
+    padding-inline: var(--rl-pad);
+    background:
+      var(--rl-grain) 120px 60px / 640px 220px,
+      linear-gradient(var(--rl-wood-deep), color-mix(in oklab, var(--rl-wood-deep) 80%, black));
+    box-shadow: inset 0 4px 6px -3px rgb(0 0 0 / 0.7);
+  }
+
+  .rl-slider {
+    position: relative;
+    z-index: 1;
+    display: block;
+    block-size: 100%;
+    margin-inline: calc(var(--rl-marble) / 2);
+    cursor: pointer;
+    outline: none;
+    touch-action: pan-y;
+  }
+
+  .rl-slider[data-disabled] {
+    cursor: default;
+  }
+
+  /* The speed jack lifts the lift end: steeper is faster. The bell end stays put. */
+  .rl-tilt {
+    position: absolute;
+    inset: 0;
+    transform-origin: 100% var(--rl-y);
+    rotate: calc(var(--rl-tilt, 0.35) * 1deg);
+    transition: rotate 320ms var(--rl-spring);
+  }
+
+  .rl-beam {
+    position: absolute;
+    inset-inline: calc(var(--rl-over) * -1);
+    top: var(--rl-y);
+    block-size: var(--rl-beam-h);
+    background:
+      var(--rl-grain) 40px 130px / 640px 220px,
+      linear-gradient(color-mix(in oklab, var(--rl-beam) 92%, white), var(--rl-beam) 30%, color-mix(in oklab, var(--rl-beam) 82%, #6b4a1c));
+    border-radius: 2px;
+    box-shadow:
+      0 0 0 1.5px var(--rl-outline),
+      0 4px 6px rgb(0 0 0 / 0.5);
+  }
+
+  .rl-ruler {
+    position: absolute;
+    inset-block: 0;
+    inset-inline: var(--rl-over);
+  }
+
+  .rl-tick {
+    position: absolute;
+    inset-block-start: 0;
+    display: flex;
+    justify-content: center;
+    inline-size: 0;
+    block-size: 4px;
+    border-inline-start: 1px solid var(--rl-burn);
+    font: 700 calc(var(--u) * 2.4) / 1 var(--rl-mono);
+    font-style: normal;
+    white-space: nowrap;
+    color: var(--rl-burn);
+    opacity: 0.7;
+  }
+
+  .rl-tick[data-rank="1"] {
+    block-size: 7px;
+    opacity: 0.85;
+  }
+
+  .rl-tick[data-rank="0"] {
+    block-size: 9px;
+    padding-block-start: 10px;
+    border-inline-start-width: 1.5px;
+    opacity: 1;
+  }
+
+  /* Two steel rods. Sleepers appear under them as the film loads; the played part is inlaid between them. */
+  .rl-track {
+    position: absolute;
+    inset-inline: 0;
+    top: calc(var(--rl-y) - 6px);
+    display: block;
+    block-size: 6px;
+  }
+
+  .rl-track::before,
+  .rl-track::after {
+    content: "";
+    position: absolute;
+    inset-inline: calc(var(--rl-over) * -1);
+    z-index: 2;
+    block-size: 2px;
+    background: linear-gradient(#f7f9fa, #8d99a3);
+    border-radius: 1px;
+    box-shadow: 0 1px 0 rgb(0 0 0 / 0.5);
+  }
+
+  .rl-track::before {
+    top: 0;
+  }
+
+  .rl-track::after {
+    bottom: 0;
+  }
+
+  .rl-sleepers {
+    position: absolute;
+    inset-block: -1px -3px;
+    inset-inline-start: 0;
+    inline-size: var(--media-slider-buffer, 0%);
+    background: repeating-linear-gradient(90deg, transparent 0 8px, var(--rl-burn) 8px 11px);
+    transition: inline-size 300ms linear;
+  }
+
+  .rl-inlay {
+    position: absolute;
+    inset-block: 2px;
+    inset-inline-start: 0;
+    z-index: 1;
+    inline-size: var(--rl-left, var(--media-slider-fill, 0%));
+    background: var(--rl-accent);
+  }
+
+  /* Chapters: a chime bar hangs under the beam where each one starts. Five lengths, a pentatonic set. */
+  .rl-chapters {
+    position: absolute;
+    inset: 0;
+    display: block;
+    pointer-events: none;
+  }
+
+  .rl-chapter {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: var(--media-slider-chapter-start, 0%);
+    inline-size: var(--media-slider-chapter-width, 100%);
+  }
+
+  .rl-chapter[data-highlighted]::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: var(--rl-y);
+    block-size: var(--rl-beam-h);
+    background: rgb(255 255 255 / 0.3);
+  }
+
+  .rl-chime {
+    position: absolute;
+    inset-inline-start: -2.5px;
+    top: calc(var(--rl-y) + var(--rl-beam-h) + 3px);
+    inline-size: 5px;
+    block-size: calc(var(--u) * 3.6);
+    background: linear-gradient(90deg, var(--rl-brass-deep), var(--rl-brass-light) 45%, var(--rl-brass-deep));
+    border-radius: 1px 1px 2px 2px;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
+  }
+
+  .rl-chapter:nth-child(5n + 3) .rl-chime {
+    block-size: calc(var(--u) * 3.15);
+  }
+
+  .rl-chapter:nth-child(5n + 4) .rl-chime {
+    block-size: calc(var(--u) * 2.7);
+  }
+
+  .rl-chapter:nth-child(5n) .rl-chime {
+    block-size: calc(var(--u) * 2.3);
+  }
+
+  .rl-chapter:nth-child(5n + 1) .rl-chime {
+    block-size: calc(var(--u) * 1.95);
+  }
+
+  .rl-chapter[data-active] .rl-chime {
+    background: linear-gradient(90deg, var(--rl-brass), #fff3c4 45%, var(--rl-brass));
+  }
+
+  /* Pause: a brass pin rises just ahead of the marble. */
+  .rl-pin {
+    position: absolute;
+    inset-inline-start: calc(var(--rl-left, 0%) + var(--rl-marble) / 2 + 1px);
+    top: calc(var(--rl-y) - 15px);
+    z-index: 2;
+    inline-size: 3px;
+    block-size: 11px;
+    background: linear-gradient(90deg, var(--rl-brass-deep), var(--rl-brass-light), var(--rl-brass-deep));
+    border-radius: 1.5px 1.5px 0 0;
+    box-shadow: 0 0 0 1px var(--rl-outline);
+    transform-origin: 50% 100%;
+    scale: 1 0;
+    transition: scale 140ms var(--rl-spring);
+  }
+
+  rolling-rail[data-paused]:not([data-ended], [data-mode="drag"], [data-mode="glide"]) .rl-pin {
+    scale: 1 1;
+  }
+
+  /* The marble is the playhead, and the slider's thumb. */
+  .rl-marble {
+    position: absolute;
+    inset-inline-start: var(--rl-left, var(--media-slider-fill, 0%));
+    top: calc(var(--rl-y) - 4px - var(--rl-marble));
+    z-index: 3;
+    display: block;
+    inline-size: var(--rl-marble);
+    block-size: var(--rl-marble);
+    border-radius: 50%;
+    outline: none;
+    translate: calc(-50% + var(--rl-rock, 0px)) 0;
+    transition: translate 0s;
+  }
+
+  .rl-ball {
+    position: absolute;
+    inset: 0;
+    display: block;
+    background: radial-gradient(circle at 34% 27%, #fff 0 5%, #edf1f4 13%, #a9b4bd 42%, #57626c 74%, #262d33 100%);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 1px var(--rl-outline),
+      0 3px 3px rgb(0 0 0 / 0.55),
+      inset 0 -2px 3px rgb(0 0 0 / 0.3);
+    transition: scale 120ms var(--rl-spring);
+  }
+
+  /* Lines engraved on the steel turn with the marble; the highlight stays where the light is. */
+  .rl-ball-spin {
+    position: absolute;
+    inset: 0;
+    display: block;
+    background:
+      radial-gradient(circle at 50% 17%, var(--rl-accent) 0 2.3px, transparent 2.9px),
+      conic-gradient(
+        from 60deg,
+        rgb(10 14 18 / 0.42) 0 1.5%,
+        transparent 1.5% 33.33%,
+        rgb(10 14 18 / 0.42) 33.33% 34.83%,
+        transparent 34.83% 66.66%,
+        rgb(10 14 18 / 0.42) 66.66% 68.16%,
+        transparent 68.16%
+      );
+    border-radius: 50%;
+    -webkit-mask: radial-gradient(circle, transparent 0 20%, #000 23%);
+    mask: radial-gradient(circle, transparent 0 20%, #000 23%);
+    rotate: var(--rl-turn, 0rad);
+  }
+
+  rolling-rail[data-mode="drag"] .rl-ball {
+    scale: 1.1;
+  }
+
+  .rl-marble:focus-visible .rl-ball {
+    outline: 3px solid var(--rl-ring-in);
+    outline-offset: 2px;
+    box-shadow:
+      0 0 0 1px var(--rl-outline),
+      0 0 0 7.5px var(--rl-ring-out);
+  }
+
+  /* End: the marble drops off the rail into the bell. */
+  rolling-rail[data-ended] .rl-marble {
+    translate: -50% calc(var(--u) * 1.75);
+    transition: translate 260ms cubic-bezier(0.5, 0, 0.8, 0.4);
+  }
+
+  /* Preview: a brass linen-tester loupe rides above the pointer. */
+  .rl-loupe {
+    position: absolute;
+    bottom: calc(100% - var(--rl-y) + var(--rl-marble) + var(--u) * 3.5);
+    z-index: 6;
+    display: grid;
+    justify-items: center;
+    pointer-events: none;
+    opacity: 0;
+    scale: 0.92;
+    transform-origin: 50% 100%;
+    transition:
+      opacity 120ms,
+      scale 180ms var(--rl-spring);
+  }
+
+  .rl-slider:is([data-pointing], [data-dragging]):not([data-disabled]) .rl-loupe {
+    opacity: 1;
+    scale: 1;
+  }
+
+  .rl-loupe-lens {
+    display: block;
+    max-inline-size: calc(var(--u) * 40);
+    overflow: hidden;
+    background: #000;
+    border-radius: 3px;
+    box-shadow:
+      0 0 0 1.5px var(--rl-outline),
+      0 0 0 5.5px var(--rl-brass),
+      0 0 0 7px var(--rl-outline),
+      0 10px 20px rgb(0 0 0 / 0.6);
+  }
+
+  .rl-loupe-lens[data-hidden] {
+    display: none;
+  }
+
+  .rl-loupe-image {
+    display: block;
+  }
+
+  .rl-loupe-plate {
+    display: flex;
+    gap: calc(var(--u) * 2);
+    align-items: baseline;
+    max-inline-size: calc(var(--u) * 56);
+    margin-block-start: calc(var(--u) * 3);
+    padding: calc(var(--u) * 0.75) calc(var(--u) * 2.5);
+    font: 600 calc(var(--u) * 3) / 1.3 var(--rl-serif);
+    white-space: nowrap;
+    color: var(--rl-ink);
+    background: var(--rl-brass-face);
+    border-radius: 2px;
+    box-shadow: var(--rl-plate-shadow);
+  }
+
+  .rl-loupe-time {
+    font: 700 calc(var(--u) * 3) / 1.3 var(--rl-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rl-loupe-chapter {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .rl-loupe-chapter:empty {
+    display: none;
+  }
+
+  /* Lift end and bell end */
+
+  .rl-lift,
+  .rl-bell {
+    position: relative;
+    z-index: 2;
+    display: block;
+    inline-size: calc(var(--u) * 5);
+    block-size: 100%;
+    pointer-events: none;
+  }
+
+  /* The screw post, and the platform it raises with the rail. */
+  .rl-lift::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: calc(50% - 3px);
+    top: calc(var(--rl-y) - var(--rl-rise, 0px));
+    bottom: calc(var(--u) * 1.5);
+    inline-size: 6px;
+    background: repeating-linear-gradient(-32deg, var(--rl-brass-deep) 0 1.5px, var(--rl-brass-light) 1.5px 3.5px);
+    border-radius: 1px;
+    box-shadow: 0 0 0 1px var(--rl-outline);
+    transition: top 320ms var(--rl-spring);
+  }
+
+  .rl-lift::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0 calc(var(--rl-marble) * -0.5);
+    top: calc(var(--rl-y) - 1px - var(--rl-rise, 0px));
+    block-size: 5px;
+    background: var(--rl-brass-face);
+    border-radius: 1.5px;
+    box-shadow: var(--rl-plate-shadow);
+    transition: top 320ms var(--rl-spring);
+  }
+
+  .rl-bell::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: calc(var(--rl-marble) * -0.5 - 3px);
+    top: calc(var(--rl-y) - var(--u) * 2.5);
+    inline-size: calc(var(--rl-marble) + 6px);
+    block-size: calc(var(--u) * 5.5);
+    background: linear-gradient(100deg, var(--rl-brass-deep), var(--rl-brass-light) 38%, var(--rl-brass) 60%, var(--rl-brass-deep));
+    border-radius: 3px 3px 50% 50% / 3px 3px 85% 85%;
+    box-shadow:
+      0 0 0 1.5px var(--rl-outline),
+      0 3px 4px rgb(0 0 0 / 0.5);
+    transform-origin: 50% 0;
+  }
+
+  rolling-rail[data-ended] .rl-bell::before {
+    animation: rl-ring 900ms ease-out 220ms;
+  }
+
+  @keyframes rl-ring {
+    0% {
+      rotate: 0deg;
+    }
+    15% {
+      rotate: 9deg;
+    }
+    35% {
+      rotate: -7deg;
+    }
+    55% {
+      rotate: 4deg;
+    }
+    75% {
+      rotate: -2deg;
+    }
+    100% {
+      rotate: 0deg;
+    }
+  }
+
+  .rl-duration,
+  .rl-counter {
+    font-family: var(--rl-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Duration, engraved on a plate at the rail's end. */
+  .rl-duration {
+    margin-inline-start: calc(var(--u) * 2);
+    padding-inline: calc(var(--u) * 2);
+    font-size: calc(var(--u) * 3);
+    font-weight: 700;
+    line-height: calc(var(--u) * 5);
+    color: var(--rl-ink);
+    background: var(--rl-brass-face);
+    border-radius: 2px;
+    box-shadow: var(--rl-plate-shadow);
+  }
+
+  /* Bench tier */
+
+  .rl-bench {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: var(--rl-gap);
+    align-items: center;
+    justify-content: space-between;
+    block-size: var(--rl-bench-h);
+    padding-inline: var(--rl-pad);
+    background:
+      var(--rl-grain) 300px 0 / 640px 220px,
+      linear-gradient(var(--rl-wood-light), var(--rl-wood) 18%, var(--rl-wood-deep));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.2);
+  }
+
+  .rl-group {
+    display: flex;
+    flex: none;
+    gap: var(--rl-gap);
+    align-items: center;
+  }
+
+  /* If the bench is ever a few pixels short, the shutters give way before anything is pushed off it. */
+  .rl-group-end {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+  }
+
+  /* Every mechanism is a real control underneath: brass, with its standard icon engraved. */
+  .rl-key {
+    position: relative;
+    display: grid;
+    flex: none;
+    place-items: center;
+    inline-size: var(--rl-key);
+    block-size: var(--rl-key);
+    font: inherit;
+    color: var(--rl-ink);
+    cursor: pointer;
+    background: var(--rl-brass-face);
+    border-radius: calc(var(--u) * 1.5);
+    outline: none;
+    box-shadow: var(--rl-key-shadow);
+    touch-action: manipulation;
+    transition:
+      translate 90ms,
+      box-shadow 90ms,
+      filter 120ms;
+  }
+
+  .rl-key[data-hidden],
+  .rl-key[hidden] {
+    display: none;
+  }
+
+  @media (hover: hover) {
+    .rl-key:hover,
+    .rl-counter:hover {
+      filter: brightness(1.08);
+    }
+  }
+
+  /* The key sinks into the bench and its edge closes up. */
+  .rl-key:active,
+  .rl-key[aria-expanded="true"] {
+    translate: 0 2px;
+    box-shadow: var(--rl-key-shadow-down);
+  }
+
+  .rl-key:focus-visible,
+  .rl-counter:focus-visible,
+  .rl-shutters-knob:focus-visible {
+    outline: 3px solid var(--rl-ring-in);
+    outline-offset: 2px;
+    box-shadow:
+      0 0 0 1.5px var(--rl-outline),
+      0 0 0 7.5px var(--rl-ring-out);
+  }
+
+  .rl-key[aria-disabled="true"],
+  .rl-key:disabled {
+    cursor: not-allowed;
+    filter: saturate(0.4) brightness(0.8);
+  }
+
+  .rl-icon {
+    display: none;
+    grid-area: 1 / 1;
+    inline-size: var(--rl-icon);
+    block-size: var(--rl-icon);
+  }
+
+  .rl-drawer > .rl-icon,
+  .rl-flipper > .rl-icon,
+  .rl-lever[data-ended] > .rl-icon-restart,
+  .rl-lever[data-paused]:not([data-ended]) > .rl-icon-play,
+  .rl-lever:not([data-paused], [data-ended]) > .rl-icon-pause,
+  .rl-horn:is([data-muted], [data-volume-level="off"]) > .rl-icon-volume-off,
+  .rl-horn:not([data-muted]):is([data-volume-level="low"], [data-volume-level="medium"]) > .rl-icon-volume-low,
+  .rl-horn:not([data-muted])[data-volume-level="high"] > .rl-icon-volume-high,
+  .rl-tapekey[data-active] > .rl-icon-captions-on,
+  .rl-tapekey:not([data-active]) > .rl-icon-captions-off,
+  .rl-locket[data-pip] > .rl-icon-pip-exit,
+  .rl-locket:not([data-pip]) > .rl-icon-pip-enter,
+  .rl-catapult[data-cast-state="connected"] > .rl-icon-cast-exit,
+  .rl-catapult:not([data-cast-state="connected"]) > .rl-icon-cast-enter,
+  .rl-catapult[data-airplay-state="connected"] > .rl-icon-airplay-exit,
+  .rl-catapult:not([data-airplay-state="connected"]) > .rl-icon-airplay-enter,
+  .rl-cord[data-fullscreen] > .rl-icon-fullscreen-exit,
+  .rl-cord:not([data-fullscreen]) > .rl-icon-fullscreen-enter {
+    display: block;
+  }
+
+  /* Play: a lever in a slot. Down is stopped, up is rolling. */
+  .rl-lever {
+    grid-template-columns: calc(var(--u) * 5.5) 1fr;
+    inline-size: calc(var(--rl-key) * 1.45);
+    padding-inline: calc(var(--u) * 1.5) calc(var(--u) * 1);
+  }
+
+  .rl-lever > .rl-icon {
+    grid-area: 1 / 2;
+    inline-size: calc(var(--rl-icon) * 1.15);
+    block-size: calc(var(--rl-icon) * 1.15);
+  }
+
+  .rl-lever-arm {
+    position: relative;
+    grid-area: 1 / 1;
+    inline-size: calc(var(--u) * 2.25);
+    block-size: 72%;
+    background: var(--rl-dark);
+    border-radius: 99px;
+    box-shadow:
+      inset 0 2px 3px rgb(0 0 0 / 0.8),
+      0 1px 0 rgb(255 255 255 / 0.5);
+  }
+
+  .rl-lever-arm::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: 50%;
+    bottom: 0;
+    inline-size: calc(var(--u) * 4.25);
+    block-size: calc(var(--u) * 4.25);
+    background: radial-gradient(circle at 35% 30%, #ffd9c2 0 8%, var(--rl-accent) 38%, color-mix(in oklab, var(--rl-accent) 55%, black) 100%);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 1.5px var(--rl-outline),
+      0 2px 3px rgb(0 0 0 / 0.5);
+    translate: -50% 12%;
+    transition:
+      bottom 180ms var(--rl-spring),
+      translate 180ms var(--rl-spring);
+  }
+
+  .rl-lever:not([data-paused], [data-ended]) .rl-lever-arm::after {
+    bottom: 100%;
+    translate: -50% 88%;
+  }
+
+  /* Before the film starts, only the lever is lit. */
+  .rl-dock:not([data-started]) .rl-lever-arm::after {
+    animation: rl-lit 1.8s ease-in-out infinite;
+  }
+
+  @keyframes rl-lit {
+    50% {
+      box-shadow:
+        0 0 0 1.5px var(--rl-outline),
+        0 0 0 5px color-mix(in oklab, var(--rl-accent) 55%, transparent),
+        0 0 14px 4px var(--rl-accent);
+    }
+  }
+
+  /* Hosts that ask for nothing but a start control before playback get the lever alone. */
+  .rl-dock:not([data-started]) :is(.rl-rail, .rl-group-end, .rl-flipper, .rl-counter) {
+    visibility: var(--media-controls-before-start, visible);
+  }
+
+  /* Skip: two pinball flippers. */
+  .rl-flipper {
+    grid-auto-flow: column;
+    gap: 1px;
+    inline-size: calc(var(--rl-key) * 1.2);
+    block-size: calc(var(--rl-key) * 0.78);
+    font: 700 calc(var(--u) * 2.9) / 1 var(--rl-mono);
+    background:
+      radial-gradient(circle at calc(var(--u) * 2.25) 50%, var(--rl-brass-deep) 0 2px, var(--rl-brass-light) 2.5px 4px, transparent 4.6px),
+      linear-gradient(#fffaf0, var(--rl-cream) 55%, #e2d2b0);
+    border-radius: calc(var(--rl-key) * 0.39) calc(var(--u) * 2.5) calc(var(--u) * 2.5) calc(var(--rl-key) * 0.39);
+    transform-origin: calc(var(--u) * 2.25) 50%;
+    rotate: 9deg;
+    transition:
+      rotate 70ms ease-out,
+      filter 120ms;
+  }
+
+  .rl-flipper > .rl-icon {
+    grid-area: auto;
+    inline-size: calc(var(--rl-icon) * 0.82);
+    block-size: calc(var(--rl-icon) * 0.82);
+    margin-inline-start: calc(var(--u) * 3.5);
+  }
+
+  .rl-flipper-fwd {
+    background:
+      radial-gradient(circle at calc(100% - var(--u) * 2.25) 50%, var(--rl-brass-deep) 0 2px, var(--rl-brass-light) 2.5px 4px, transparent 4.6px),
+      linear-gradient(#fffaf0, var(--rl-cream) 55%, #e2d2b0);
+    border-radius: calc(var(--u) * 2.5) calc(var(--rl-key) * 0.39) calc(var(--rl-key) * 0.39) calc(var(--u) * 2.5);
+    transform-origin: calc(100% - var(--u) * 2.25) 50%;
+    rotate: -9deg;
+  }
+
+  .rl-flipper-fwd > .rl-icon {
+    order: 2;
+    margin-inline: 0 calc(var(--u) * 3.5);
+  }
+
+  .rl-flipper-fwd > .rl-flipper-num {
+    margin-inline-start: calc(var(--u) * 1);
+  }
+
+  .rl-flipper-back > .rl-flipper-num {
+    margin-inline-end: calc(var(--u) * 1);
+  }
+
+  .rl-icon-seek-back {
+    scale: -1 1;
+  }
+
+  /* The kick. */
+  .rl-flipper-back:active {
+    translate: none;
+    rotate: -16deg;
+    box-shadow: var(--rl-key-shadow);
+  }
+
+  .rl-flipper-fwd:active {
+    translate: none;
+    rotate: 16deg;
+    box-shadow: var(--rl-key-shadow);
+  }
+
+  /* Time: a drum counter behind a brass window. Press it for time remaining. */
+  .rl-counter {
+    flex: none;
+    min-inline-size: calc(var(--u) * 15);
+    padding-inline: calc(var(--u) * 2.5);
+    font-size: calc(var(--u) * 4);
+    font-weight: 700;
+    line-height: calc(var(--u) * 8);
+    letter-spacing: 0.32ch;
+    text-align: center;
+    text-indent: 0.32ch;
+    color: var(--rl-cream);
+    cursor: pointer;
+    background:
+      linear-gradient(rgb(0 0 0 / 0.75), transparent 34% 66%, rgb(0 0 0 / 0.75)),
+      repeating-linear-gradient(90deg, transparent 0 calc(1.32ch - 1px), rgb(255 255 255 / 0.16) calc(1.32ch - 1px) 1.32ch) 50% 0 / calc(100% - var(--u) * 5 + 0.32ch) 100% no-repeat,
+      var(--rl-dark);
+    border-radius: calc(var(--u) * 1);
+    outline: none;
+    box-shadow:
+      inset 0 2px 4px rgb(0 0 0 / 0.9),
+      0 0 0 1.5px var(--rl-outline),
+      0 0 0 5px var(--rl-brass),
+      0 0 0 6.5px var(--rl-outline),
+      0 4px 5px 4px rgb(0 0 0 / 0.35);
+    margin-inline: 6.5px;
+  }
+
+  .rl-counter[data-disabled] {
+    cursor: default;
+    color: rgb(246 234 210 / 0.55);
+  }
+
+  /* Mute: a cork in the brass horn. */
+  .rl-horn {
+    color: var(--rl-cream);
+    background: radial-gradient(
+      circle,
+      var(--rl-dark) 0 47%,
+      var(--rl-brass-deep) 49% 54%,
+      var(--rl-brass) 56% 72%,
+      var(--rl-brass-light) 76% 84%,
+      var(--rl-brass) 90% 100%
+    );
+    border-radius: 50%;
+  }
+
+  .rl-horn > .rl-icon {
+    z-index: 1;
+    inline-size: calc(var(--rl-icon) * 0.82);
+    block-size: calc(var(--rl-icon) * 0.82);
+  }
+
+  .rl-cork {
+    grid-area: 1 / 1;
+    inline-size: 66%;
+    block-size: 66%;
+    background:
+      radial-gradient(circle at 30% 35%, rgb(90 52 18 / 0.5) 0 1px, transparent 1.6px),
+      radial-gradient(circle at 68% 62%, rgb(90 52 18 / 0.45) 0 1.2px, transparent 1.8px),
+      radial-gradient(circle at 60% 24%, rgb(90 52 18 / 0.4) 0 0.9px, transparent 1.5px),
+      radial-gradient(circle at 36% 76%, rgb(90 52 18 / 0.4) 0 1px, transparent 1.6px),
+      radial-gradient(circle at 40% 35%, #dcb882, #c2975f 70%, #a67c47);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 1.5px var(--rl-outline),
+      0 2px 3px rgb(0 0 0 / 0.6);
+    scale: 0;
+    transition: scale 200ms var(--rl-spring);
+  }
+
+  .rl-horn:is([data-muted], [data-volume-level="off"]) {
+    color: var(--rl-ink);
+  }
+
+  .rl-horn:is([data-muted], [data-volume-level="off"]) > .rl-cork {
+    scale: 1;
+  }
+
+  /* Volume: swell shutters. Slats open as it rises and light leaks out between them. */
+  .rl-shutters {
+    position: relative;
+    display: block;
+    flex: 0 1 auto;
+    inline-size: calc(var(--u) * 24);
+    min-inline-size: calc(var(--u) * 7);
+    block-size: var(--rl-key);
+    margin-inline: calc(var(--u) * 2);
+    cursor: pointer;
+    outline: none;
+    touch-action: none;
+  }
+
+  .rl-shutters[data-hidden],
+  .rl-shutters[hidden] {
+    display: none;
+  }
+
+  .rl-shutters-track {
+    position: absolute;
+    inset-block: calc(var(--u) * 2.25);
+    inset-inline: 0;
+    display: block;
+    overflow: hidden;
+    background: repeating-linear-gradient(90deg, #6a4526 0 1px, #c9a877 1px 6px, #3b2413 6px 7px);
+    border-radius: 2px;
+    box-shadow:
+      0 0 0 1.5px var(--rl-outline),
+      0 0 0 5px var(--rl-brass),
+      0 0 0 6.5px var(--rl-outline),
+      0 4px 5px 4px rgb(0 0 0 / 0.35);
+  }
+
+  .rl-shutters-open {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    display: block;
+    inline-size: var(--media-slider-fill, 0%);
+    background: repeating-linear-gradient(
+      90deg,
+      #3b2413 0 2px,
+      color-mix(in oklab, var(--rl-accent) 55%, #fff1b8) 2px 7px
+    );
+    box-shadow: inset 0 0 6px rgb(255 255 255 / 0.35);
+  }
+
+  .rl-shutters-knob {
+    position: absolute;
+    inset-inline-start: var(--media-slider-fill, 0%);
+    top: 50%;
+    display: block;
+    inline-size: calc(var(--u) * 2.75);
+    block-size: calc(var(--rl-key) * 0.86);
+    background: linear-gradient(90deg, var(--rl-brass-deep), var(--rl-brass-light) 40%, var(--rl-brass) 70%, var(--rl-brass-deep));
+    border-radius: 99px;
+    outline: none;
+    box-shadow:
+      0 0 0 1.5px var(--rl-outline),
+      0 3px 4px rgb(0 0 0 / 0.5);
+    translate: -50% -50%;
+  }
+
+  /* Speed: a ratchet jack. Each press is one tooth. */
+  .rl-jack {
+    grid-template-columns: calc(var(--u) * 3) 1fr;
+    inline-size: calc(var(--rl-key) * 1.3);
+    padding-inline: calc(var(--u) * 1.75) calc(var(--u) * 1);
+    font: 700 calc(var(--u) * 3.4) / 1 var(--rl-mono);
+    font-variant-numeric: tabular-nums;
+    --rl-lift: 2;
+  }
+
+  .rl-jack::after {
+    content: attr(data-rate) "\00D7";
+  }
+
+  .rl-jack-rack {
+    position: relative;
+    inline-size: calc(var(--u) * 2);
+    block-size: 68%;
+    background: repeating-linear-gradient(0deg, var(--rl-ink) 0 1.5px, transparent 1.5px 20%);
+    border-inline-start: 1.5px solid var(--rl-ink);
+  }
+
+  .rl-jack-rack::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: 2px;
+    bottom: calc(var(--rl-lift) * 20% - 4px);
+    border: 4px solid transparent;
+    border-inline-start: 7px solid var(--rl-accent);
+    filter: drop-shadow(0 0 0.75px var(--rl-outline)) drop-shadow(0 0 0.75px var(--rl-outline));
+    transition: bottom 160ms steps(2, jump-end);
+  }
+
+  .rl-jack[data-rate="0.5"] {
+    --rl-lift: 0;
+  }
+
+  .rl-jack[data-rate="0.75"] {
+    --rl-lift: 1;
+  }
+
+  .rl-jack[data-rate="1.25"] {
+    --rl-lift: 3;
+  }
+
+  .rl-jack[data-rate="1.5"] {
+    --rl-lift: 4;
+  }
+
+  .rl-jack[data-rate="1.75"],
+  .rl-jack[data-rate="2"] {
+    --rl-lift: 5;
+  }
+
+  /* Captions: the tape key. Held down, a strip of tape feeds out. */
+  .rl-tapekey {
+    background: linear-gradient(#fffaf0, var(--rl-cream) 55%, #e2d2b0);
+  }
+
+  .rl-tapekey-strip {
+    position: absolute;
+    inset-inline: 22%;
+    bottom: calc(100% + 1.5px);
+    block-size: calc(var(--u) * 2.5);
+    background:
+      repeating-linear-gradient(0deg, transparent 0 3px, rgb(36 21 10 / 0.5) 3px 4px) 50% 2px / 62% 100% no-repeat,
+      var(--rl-cream);
+    border-radius: 1px 1px 0 0;
+    box-shadow: 0 0 0 1.5px var(--rl-outline);
+    transform-origin: 50% 100%;
+    scale: 1 0;
+    transition: scale 200ms var(--rl-spring);
+  }
+
+  .rl-tapekey[data-active] {
+    translate: 0 2px;
+    box-shadow: var(--rl-key-shadow-down);
+  }
+
+  .rl-tapekey[data-active] > .rl-tapekey-strip {
+    scale: 1 1;
+  }
+
+  /* Picture-in-picture: a brass locket on its ring. */
+  .rl-locket {
+    border-radius: 50%;
+    box-shadow:
+      inset 0 0 0 3px var(--rl-brass),
+      inset 0 0 0 4px rgb(80 50 8 / 0.55),
+      var(--rl-key-shadow);
+  }
+
+  .rl-locket::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: calc(50% - var(--u) * 1.25);
+    bottom: calc(100% - 1px);
+    inline-size: calc(var(--u) * 2.5);
+    block-size: calc(var(--u) * 2.5);
+    border: 2px solid var(--rl-brass);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 1.5px var(--rl-outline),
+      inset 0 0 0 1.5px var(--rl-outline);
+  }
+
+  .rl-locket[data-pip] {
+    color: var(--rl-accent-ink);
+    background: radial-gradient(circle, var(--rl-accent) 0 58%, var(--rl-brass) 62%);
+  }
+
+  /* Cast and AirPlay: the catapult, a wooden arm that throws the film to another screen. */
+  .rl-catapult {
+    color: var(--rl-cream);
+    background:
+      linear-gradient(135deg, transparent 0 calc(50% - 2.5px), var(--rl-brass) calc(50% - 2.5px) calc(50% + 2.5px), transparent calc(50% + 2.5px)) 0 100% / 34% 34% no-repeat,
+      linear-gradient(#5a3a22, #3b2314);
+    box-shadow:
+      inset 0 0 0 1.5px rgb(255 255 255 / 0.18),
+      0 0 0 1.5px var(--rl-outline),
+      0 3px 0 1.5px var(--rl-outline),
+      0 6px 7px -1px rgb(0 0 0 / 0.5);
+  }
+
+  .rl-catapult:is([data-cast-state="connected"], [data-airplay-state="connected"]) {
+    color: var(--rl-accent);
+  }
+
+  /* Settings: a drawer in the bench. The knob carries the gear. */
+  .rl-drawer {
+    inline-size: calc(var(--rl-key) * 1.45);
+    block-size: calc(var(--rl-key) * 0.82);
+    background:
+      var(--rl-grain) 200px 90px / 640px 220px,
+      linear-gradient(#8a5a35, #5e3a20);
+    border-radius: calc(var(--u) * 0.75);
+    box-shadow:
+      inset 0 0 0 3px rgb(0 0 0 / 0.001),
+      inset 0 0 0 4px rgb(20 10 4 / 0.55),
+      inset 0 1px 0 rgb(255 255 255 / 0.3),
+      0 0 0 1.5px var(--rl-outline),
+      0 3px 0 1.5px var(--rl-outline),
+      0 6px 7px -1px rgb(0 0 0 / 0.5);
+  }
+
+  .rl-drawer > .rl-icon {
+    box-sizing: content-box;
+    padding: calc(var(--u) * 1);
+    background: var(--rl-brass-face);
+    border-radius: 50%;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.55),
+      0 0 0 1.5px var(--rl-outline),
+      0 2px 3px rgb(0 0 0 / 0.5);
+  }
+
+  .rl-drawer[aria-expanded="true"] {
+    translate: 0 3px;
+  }
+
+  /* Full screen: a pull cord with a wooden bead. */
+  .rl-cord {
+    align-self: flex-end;
+    inline-size: calc(var(--rl-key) * 0.92);
+    block-size: calc(var(--rl-key) * 0.92);
+    margin-block-end: calc((var(--rl-bench-h) - var(--rl-key)) / 2 - var(--u) * 1.5);
+    background: radial-gradient(circle at 36% 30%, #fff6de, var(--rl-beam) 45%, #b9945a);
+    border-radius: 50% 50% 50% 50% / 44% 44% 56% 56%;
+    box-shadow:
+      0 0 0 1.5px var(--rl-outline),
+      0 5px 7px rgb(0 0 0 / 0.5);
+    transition:
+      translate 140ms var(--rl-spring),
+      filter 120ms;
+  }
+
+  .rl-cord-line {
+    position: absolute;
+    inset-inline-start: calc(50% - 1.5px);
+    bottom: calc(100% + 1px);
+    inline-size: 3px;
+    block-size: calc(var(--rl-bench-h) - var(--rl-key) * 0.92 - (var(--rl-bench-h) - var(--rl-key)) / 2 + var(--u) * 1.5);
+    background: repeating-linear-gradient(30deg, #efe2c4 0 2px, #b89c6c 2px 3.5px);
+    box-shadow: 0 0 0 1px var(--rl-outline);
+    transform-origin: 50% 0;
+    transition: scale 140ms var(--rl-spring);
+  }
+
+  .rl-cord:active {
+    translate: 0 4px;
+    box-shadow:
+      0 0 0 1.5px var(--rl-outline),
+      0 5px 7px rgb(0 0 0 / 0.5);
+  }
+
+  .rl-cord:focus-visible {
+    box-shadow:
+      0 0 0 1.5px var(--rl-outline),
+      0 0 0 7.5px var(--rl-ring-out);
+  }
+
+  /* ---------- Popups: tooltips are brass plates, the settings menu is a felt-lined drawer ---------- */
+
+  .rolling .media-tooltip-popup {
+    padding: calc(var(--u) * 1) calc(var(--u) * 2.5);
+    font: 600 calc(var(--u) * 2.9) / 1.3 var(--rl-serif);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--rl-ink);
+    background: var(--rl-brass-face);
+    border-radius: 2px;
+    box-shadow: var(--rl-plate-shadow);
+  }
+
+  .rolling .media-tooltip-shortcut {
+    padding: 0.1em 0.45em;
+    font: 700 calc(var(--u) * 2.6) / 1.25 var(--rl-mono);
+    color: var(--rl-cream);
+    background: var(--rl-ink);
+    border-radius: 2px;
+  }
+
+  .rolling .rl-drawer-box,
+  .rolling .rl-shutterbox {
+    color: var(--rl-cream);
+    background:
+      linear-gradient(rgb(255 255 255 / 0.04), rgb(0 0 0 / 0.18)),
+      var(--rl-felt);
+    border: 5px solid #6f4628;
+    border-radius: calc(var(--u) * 1.5);
+    box-shadow:
+      inset 0 0 0 1.5px var(--rl-outline),
+      inset 0 3px 8px rgb(0 0 0 / 0.7),
+      0 0 0 1.5px var(--rl-outline),
+      0 14px 28px rgb(0 0 0 / 0.55);
+  }
+
+  .rolling .media-menu-popup {
+    font: 500 calc(var(--u) * 3.5) / 1.3 var(--rl-serif);
+  }
+
+  /* Each setting is a peg moved between holes. */
+  .rolling .media-menu-indicator {
+    inline-size: calc(var(--u) * 3.5);
+    block-size: calc(var(--u) * 3.5);
+    background: #0d0806;
+    border-radius: 50%;
+    box-shadow:
+      inset 0 2px 2px rgb(0 0 0 / 0.9),
+      0 1px 0 rgb(255 255 255 / 0.18);
+    opacity: 1;
+  }
+
+  .rolling .media-menu-indicator > * {
+    display: none;
+  }
+
+  .rolling [aria-checked="true"] > .media-menu-indicator {
+    background: radial-gradient(circle at 36% 30%, var(--rl-brass-light), var(--rl-brass) 55%, var(--rl-brass-deep));
+    box-shadow:
+      0 0 0 1px var(--rl-outline),
+      0 2px 2px rgb(0 0 0 / 0.6);
+  }
+
+  /* Error: the marble lies in a tray. */
+  .rolling .rl-tray {
+    font-family: var(--rl-serif);
+    color: var(--rl-cream);
+    background:
+      var(--rl-grain) 0 0 / 640px 220px,
+      linear-gradient(var(--rl-wood-light), var(--rl-wood));
+    box-shadow:
+      inset 0 0 0 1.5px rgb(255 255 255 / 0.15),
+      0 0 0 1.5px var(--rl-outline),
+      0 18px 40px rgb(0 0 0 / 0.6);
+  }
+
+  .rl-tray-marble {
+    inline-size: calc(var(--u) * 7);
+    block-size: calc(var(--u) * 7);
+    margin-block-end: calc(var(--u) * 2);
+  }
+
+  .rolling .media-dialog-close {
+    inline-size: auto;
+    min-inline-size: calc(var(--u) * 22);
+    block-size: calc(var(--u) * 11);
+    padding-inline: calc(var(--u) * 4);
+    font: 700 calc(var(--u) * 3.25) / 1 var(--rl-serif);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--rl-ink);
+    background: var(--rl-brass-face);
+    border-radius: calc(var(--u) * 1.5);
+    box-shadow: var(--rl-key-shadow);
+  }
+
+  .rolling .media-dialog-close:focus-visible,
+  .rolling .media-volume-slider-thumb:focus-visible,
+  .rolling :is(.media-menu-item, .media-menu-back-item, .media-menu-radio-item):focus-visible {
+    outline: 3px solid var(--rl-ring-in);
+    outline-offset: 1px;
+    box-shadow: 0 0 0 6.5px var(--rl-ring-out);
+  }
+
+  /* The shutter box only opens where the shutters themselves do not fit on the bench. */
+  .rolling .rl-shutterbox {
+    display: none;
+  }
+
+  /* ---------- Size tiers (player width). The thresholds match TIER_MIN_WIDTH in rail/ruler.ts. ---------- */
+
+  /* A container cannot restyle itself from its own query, so each tier sets its sizes on the dock. */
+
+  /* L: everything but the nameplate, drawn tighter. */
+  @container rolling (width < 960px) {
+    .rl-dock {
+      --rl-pad: calc(var(--u) * 3);
+      --rl-gap: calc(var(--u) * 1.5);
+      --rl-key: calc(var(--u) * 11);
+      --rl-icon: calc(var(--u) * 5);
+      --rl-lip-h: calc(var(--u) * 5.5);
+      --rl-rail-h: calc(var(--u) * 15.5);
+      --rl-bench-h: calc(var(--u) * 16);
+      --rl-marble: calc(var(--u) * 5.5);
+      --rl-beam-h: calc(var(--u) * 4.5);
+    }
+
+    .rl-nameplate {
+      display: none;
+    }
+
+    .rl-shutters {
+      inline-size: calc(var(--u) * 16);
+    }
+  }
+
+  /* shortcut: below 720px the catapult leaves the bench and is not yet offered in the drawer; add it there in P4. */
+  @container rolling (width < 720px) {
+    .rl-catapult {
+      display: none;
+    }
+  }
+
+  @container rolling (width < 760px) {
+    .rl-shutters {
+      inline-size: calc(var(--u) * 11);
+      margin-inline: calc(var(--u) * 1.75);
+    }
+
+    .rl-lever {
+      inline-size: calc(var(--rl-key) * 1.3);
+    }
+
+    .rl-flipper {
+      inline-size: calc(var(--rl-key) * 1.05);
+    }
+
+    .rl-drawer {
+      inline-size: calc(var(--rl-key) * 1.2);
+    }
+
+    .rl-counter {
+      min-inline-size: calc(var(--u) * 13);
+      padding-inline: calc(var(--u) * 1.5);
+      font-size: calc(var(--u) * 3.5);
+    }
+  }
+
+  /* M: rail; lever, counter, horn, tape key, drawer, cord. Skip is a double tap, volume is in the horn's shutter box, speed is in the drawer. */
+  @container rolling (width < 640px) {
+    .rl-dock {
+      --rl-pad: calc(var(--u) * 2.5);
+      --rl-gap: calc(var(--u) * 2);
+      --rl-lip-h: calc(var(--u) * 2);
+      --rl-rail-h: calc(var(--u) * 12.5);
+      --rl-bench-h: calc(var(--u) * 15);
+      --rl-marble: calc(var(--u) * 4.5);
+      --rl-beam-h: calc(var(--u) * 4);
+      --rl-over: calc(var(--u) * 3.5);
+    }
+
+    .rl-tape,
+    .rl-flipper,
+    .rl-shutters,
+    .rl-jack,
+    .rl-locket,
+    .rl-catapult,
+    .rolling .rl-horn-tooltip {
+      display: none;
+    }
+
+    .rolling .rl-shutterbox[data-open],
+    .rolling .rl-shutterbox:popover-open {
+      display: block;
+    }
+
+    .rl-lever,
+    .rl-drawer {
+      inline-size: calc(var(--rl-key) * 1.45);
+    }
+
+    .rl-tick {
+      font-size: calc(var(--u) * 2.2);
+    }
+
+    .rl-loupe-lens {
+      max-inline-size: calc(var(--u) * 30);
+    }
+  }
+
+  /* S: rail; lever, counter, horn, cord. */
+  @container rolling (width < 420px) {
+    .rl-dock {
+      --rl-pad: calc(var(--u) * 2);
+      --rl-rail-h: calc(var(--u) * 11.5);
+      --rl-bench-h: calc(var(--u) * 14);
+      --rl-over: calc(var(--u) * 2.5);
+    }
+
+    .rl-tapekey,
+    .rl-drawer,
+    .rl-duration {
+      display: none;
+    }
+
+    .rl-lift,
+    .rl-bell {
+      inline-size: calc(var(--u) * 3.5);
+    }
+
+    .rl-loupe-lens {
+      max-inline-size: calc(var(--u) * 24);
+    }
+  }
+
+  /* XS: lever, a short rail, horn, cord. */
+  @container rolling (width < 280px) {
+    .rl-dock {
+      --rl-pad: calc(var(--u) * 1.5);
+      --rl-gap: calc(var(--u) * 1.5);
+      --rl-lip-h: calc(var(--u) * 1);
+      --rl-rail-h: calc(var(--u) * 8.5);
+      --rl-bench-h: calc(var(--u) * 13);
+      --rl-marble: calc(var(--u) * 4);
+      --rl-beam-h: calc(var(--u) * 1.5);
+      --rl-y: calc(50% + var(--u) * 1.5);
+    }
+
+    .rl-counter,
+    .rl-ruler,
+    .rl-chapters,
+    .rl-loupe-lens,
+    .rolling .rl-shutterbox,
+    .rolling .rl-shutterbox[data-open] {
+      display: none;
+    }
+
+    .rl-lever {
+      inline-size: calc(var(--rl-key) * 1.3);
+    }
+  }
+
+  /* XXS: lever and horn only. */
+  @container rolling (width < 200px) {
+    .rl-dock {
+      --rl-lip-h: 0px;
+      --rl-bench-h: calc(var(--u) * 12.5);
+    }
+
+    .rl-rail,
+    .rl-cord {
+      display: none;
+    }
+
+    .rl-lever {
+      inline-size: var(--rl-key);
+      grid-template-columns: 1fr;
+      padding-inline: 0;
+    }
+
+    .rl-lever > .rl-icon {
+      grid-area: 1 / 1;
+    }
+
+    .rl-lever-arm {
+      display: none;
+    }
+  }
+
+  /* Fingers need room: at least 44px, 48 where the bench has it. */
+  @media (pointer: coarse) {
+    .rolling > .rl-dock {
+      --rl-key: max(calc(var(--u) * 12), 48px);
+    }
+
+    @container rolling (width < 960px) {
+      .rolling > .rl-dock {
+        --rl-key: max(calc(var(--u) * 11), 44px);
+      }
+    }
+
+    .rl-counter {
+      line-height: max(calc(var(--u) * 9), 36px);
+    }
+
+    .rl-counter::before {
+      content: "";
+      position: absolute;
+      inset: -6px 0;
+    }
+  }
+
+  /* ---------- Full screen: the dock lies over the foot of the picture and hides when the viewer is idle ---------- */
+
+  .media-skin.rolling:fullscreen {
+    grid-template: "film" minmax(0, 1fr) / minmax(0, 1fr);
+    border-radius: 0;
+    background: #000;
+  }
+
+  .media-skin.rolling:fullscreen > :first-child {
+    block-size: 100%;
+    aspect-ratio: auto;
+  }
+
+  .media-skin.rolling:fullscreen > .rl-dock {
+    grid-area: film;
+    align-self: end;
+    transition:
+      translate 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      visibility 0s;
+  }
+
+  .media-skin.rolling:fullscreen > .rl-dock:not([data-visible]):not(:has(:focus-visible)) {
+    visibility: hidden;
+    translate: 0 100%;
+    transition:
+      translate 260ms cubic-bezier(0.6, 0, 0.8, 0.2),
+      visibility 0s 260ms;
+  }
+
+  /* ---------- Right to left: the rail runs the other way ---------- */
+
+  .rolling:dir(rtl) .rl-tilt {
+    transform-origin: 0 var(--rl-y);
+    rotate: calc(var(--rl-tilt, 0.35) * -1deg);
+  }
+
+  .rolling:dir(rtl) .rl-marble {
+    translate: calc(50% - var(--rl-rock, 0px)) 0;
+  }
+
+  .rolling:dir(rtl) .rl-ball-spin {
+    rotate: calc(var(--rl-turn, 0rad) * -1);
+  }
+
+  .rolling:dir(rtl) :is(.rl-icon-seek-back, .rl-flipper-fwd > .rl-icon) {
+    scale: -1 1;
+  }
+
+  .rolling:dir(rtl) .rl-flipper-fwd > .rl-icon {
+    scale: 1 1;
+  }
+
+  /* ---------- Preferences ---------- */
+
+  /* Calm on request: mechanisms change state without travel. The marble's own motion is stilled in rail/physics. */
+  @media (prefers-reduced-motion: reduce) {
+    .rolling :is(.rl-dock, .rl-dock *, .rl-dock *::before, .rl-dock *::after) {
+      transition-duration: 0s !important;
+      animation: none !important;
+    }
+
+    .rl-waiting[data-visible] .rl-waiting-ball {
+      animation: rl-pulse 1.6s ease-in-out infinite;
+    }
+  }
+
+  @keyframes rl-pulse {
+    50% {
+      opacity: 0.45;
+    }
+  }
+
+  @media (prefers-contrast: more) {
+    .media-skin.rolling {
+      --rl-outline: #000;
+      --rl-ink: #000;
+      --rl-cream: #fff;
+      --rl-brass: #dcb85e;
+      --rl-ring-out: #000;
+      --rl-ring-in: #fff;
+    }
+
+    .rl-key,
+    .rl-counter {
+      box-shadow:
+        0 0 0 2.5px var(--rl-outline),
+        0 3px 0 2.5px var(--rl-outline);
+    }
+  }
+
+  /* Forced colours: the machine steps back and plain system-coloured controls remain. */
+  @media (forced-colors: active) {
+    .rl-key,
+    .rl-counter,
+    .rl-duration,
+    .rl-nameplate,
+    .rl-shutters-track,
+    .rl-beam {
+      border: 1px solid ButtonText;
+      forced-color-adjust: auto;
+    }
+
+    .rl-key,
+    .rl-counter {
+      color: ButtonText;
+      background: ButtonFace;
+      rotate: none;
+    }
+
+    .rl-ball,
+    .rl-shutters-knob {
+      background: ButtonText;
+      forced-color-adjust: none;
+    }
+
+    .rl-inlay,
+    .rl-shutters-open {
+      background: Highlight;
+      forced-color-adjust: none;
+    }
+
+    .rl-track::before,
+    .rl-track::after {
+      background: CanvasText;
+      forced-color-adjust: none;
+    }
+
+    .rl-key:focus-visible,
+    .rl-counter:focus-visible,
+    .rl-shutters-knob:focus-visible,
+    .rl-marble:focus-visible .rl-ball {
+      outline: 3px solid Highlight;
+    }
+
+    .rl-lever-arm,
+    .rl-cork,
+    .rl-jack-rack,
+    .rl-tapekey-strip,
+    .rl-cord-line,
+    .rl-ball-spin,
+    .rl-lift,
+    .rl-bell,
+    .rl-chime,
+    .rl-pin,
+    .rl-tape {
+      display: none;
+    }
+  }
+}
