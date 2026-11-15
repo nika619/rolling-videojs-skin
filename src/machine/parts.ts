@@ -324,46 +324,115 @@ export function buildMachine(build: Build): Updater[] {
     mesh(rail, new BoxGeometry(r + 4, 2.2, 3), mats.brass, r * 0.5 + 2, foot + 3, halfFoot - 2);
     const ring = mem('bell', () => spring(0));
 
-    // The snake under the rail, head at the bell and tail at the ladder: the way back for a replay.
+    // Snakes and ladders: the rail is the board, the die on the jack sets the pace, and this is the way home.
+    // The snake lies under the beam as the return track, its head under the bell and its tail coiled round the
+    // foot of the ladder. It watches the marble come: its head follows it down the rail, rises toward the bell as
+    // the film nears its end, and waits there with its mouth open. Played again, it swallows the marble, carries
+    // it down its body to the ladder, and the ladder lifts it to the start.
     const snakeR = shape.snakeRadius;
-    const waves = Math.max(2, Math.round(length / (snakeR * 26)));
-    const headX = railBox.end + dir * (r * 0.4);
-    const tailX = railBox.start - dir * (r * 0.2);
-    const body = (t: number): Vector3 =>
-      new Vector3(
-        headX + (tailX - headX) * t,
-        shape.snakeY + Math.sin(t * waves * TAU) * snakeR * 0.22,
-        shape.snakeZ + Math.cos(t * waves * TAU + 1) * snakeR * 0.3
+    // Bigger than the body, as a carved head is: it has to read as a face from across the room.
+    const headR = Math.max(snakeR * 1.6, r * 0.8);
+    const bellX = railBox.end + dir * (r + 5.5);
+    const ladderX = railBox.start - dir * (r + 6.5);
+    const ladderZ = shape.z + halfFoot * 0.4;
+    const coil = 8.5;
+    const neckX = bellX - dir * snakeR * 0.6;
+    const runEnd = ladderX + dir * coil * 1.7;
+    const waves = Math.max(2, Math.round(Math.abs(neckX - runEnd) / (snakeR * 26)));
+    const points: Vector3[] = [];
+    const runSamples = Math.max(10, Math.round(length / 18));
+    for (let i = 0; i <= runSamples; i++) {
+      const t = i / runSamples;
+      // Down a gentle slope toward the ladder, as a return track runs, and onto the ladder's line at the end.
+      const toLadder = ease(clamp((t - 0.85) / 0.15, 0, 1));
+      points.push(
+        new Vector3(
+          neckX + (runEnd - neckX) * t,
+          shape.snakeY + snakeR * 0.3 * (1 - t) + Math.sin(t * waves * TAU) * snakeR * 0.2,
+          shape.snakeZ + Math.cos(t * waves * TAU + 1) * snakeR * 0.28 * (1 - toLadder) + (ladderZ + coil * 0.45 - shape.snakeZ) * toLadder
+        )
       );
-    const samples = Math.max(10, Math.round(length / 18));
-    const curve = new CatmullRomCurve3(Array.from({ length: samples + 1 }, (_, index) => body(index / samples)));
+    }
+    // Once and a bit round the ladder, the tail thinning as it goes.
+    for (let i = 1; i <= 16; i++) {
+      const a = (i / 16) * Math.PI * 2.3 - Math.PI * 0.08;
+      points.push(new Vector3(ladderX + dir * coil * Math.cos(a), shape.snakeY - (i / 16) * snakeR * 0.8, ladderZ + coil * Math.sin(a)));
+    }
+    const curve = new CatmullRomCurve3(points);
+    const tailEnd = points[points.length - 1]!;
     mats.snakeShape.radius.value = snakeR;
-    mats.snakeShape.length.value = length;
+    mats.snakeShape.length.value = curve.getLength();
     // It lies in the beam's shadow, but it is the way home: it keeps its colours.
-    mesh(world, new TubeGeometry(curve, Math.max(24, Math.round(length / 3)), snakeR, 14, false), mats.snake).receiveShadow = false;
+    mesh(world, new TubeGeometry(curve, Math.max(40, Math.round(length / 3)), snakeR, 16, false), mats.snake).receiveShadow = false;
 
-    const head = put(world, new Group());
-    head.position.copy(body(0)).add(new Vector3(dir * snakeR * 0.7, snakeR * 0.15, 0));
+    // The head turns on a pivot at the end of the body: a carved skull painted like the body, one gold diamond for a
+    // crest, amber eyes with slit pupils under heavy brows, a jaw that drops, a forked tongue. At rest it lies turned
+    // back along its own coils, looking up the rail at the marble.
+    const neckFoot = points[0]!.clone();
+    const head = put(world, new Group(), neckFoot.x, neckFoot.y, neckFoot.z);
     head.scale.x = dir;
-    const skull = mesh(head, new SphereGeometry(snakeR * 1.55, 26, 16), mats.snake);
-    skull.scale.set(1.55, 0.85, 1.05);
-    for (const side of [-1, 1]) mesh(head, new SphereGeometry(snakeR * 0.27, 10, 8), mats.eye, snakeR * 0.75, snakeR * 0.72, side * snakeR * 0.78, false);
+    const pose = put(head, new Group());
+    mesh(pose, new SphereGeometry(headR, 32, 20), mats.snakeHead, headR * 0.85, 0, 0).scale.set(1.25, 0.62, 0.95);
+    const crest = mesh(pose, new CylinderGeometry(0, headR * 0.34, headR * 0.14, 4), mats.brass, headR * 0.95, headR * 0.66, 0, false);
+    crest.scale.set(1.7, 1, 1);
+    crest.rotation.y = Math.PI / 4;
+    const jaw = put(pose, new Group(), headR * 0.2, -headR * 0.1, 0);
+    // The jaw in the belly's cream: it draws the line of the mouth, which is what makes the shape a head.
+    mesh(jaw, new SphereGeometry(headR * 0.95, 28, 12, 0, TAU, Math.PI / 2, Math.PI / 2), mats.snakeBelly, headR * 0.75, 0, 0).scale.set(1.25, 0.46, 0.86);
+    mesh(pose, new SphereGeometry(headR * 0.8, 18, 10), mats.mouth, headR * 0.9, -headR * 0.14, 0, false).scale.set(1.2, 0.2, 0.78);
+    for (const side of [-1, 1]) {
+      const eyeR = headR * 0.32;
+      const out = new Vector3(0.3, 0.45, side * 0.85).normalize();
+      const eye = put(pose, new Group(), headR * 1.1, headR * 0.38, side * headR * 0.72);
+      mesh(eye, new SphereGeometry(eyeR, 20, 14), mats.iris, 0, 0, 0, false);
+      mesh(eye, new SphereGeometry(eyeR * 0.5, 12, 10), mats.eye, out.x * eyeR * 0.75, out.y * eyeR * 0.75, out.z * eyeR * 0.75, false).scale.set(0.36, 1.2, 0.36);
+      // A brow over each eye: what makes a carved snake look watchful rather than surprised.
+      const brow = mesh(eye, new SphereGeometry(eyeR * 1.2, 16, 8, 0, TAU, 0, Math.PI * 0.4), mats.snakeHead, -eyeR * 0.15, eyeR * 0.2, side * eyeR * 0.1);
+      brow.rotation.x = side * 0.35;
+    }
     const fork = new Shape();
-    fork.moveTo(0, -0.5);
-    fork.lineTo(snakeR * 1.5, -0.5);
-    fork.lineTo(snakeR * 2.4, -snakeR * 0.5);
-    fork.lineTo(snakeR * 1.8, 0);
-    fork.lineTo(snakeR * 2.4, snakeR * 0.5);
-    fork.lineTo(snakeR * 1.5, 0.5);
-    fork.lineTo(0, 0.5);
-    const tongue = mesh(head, new ShapeGeometry(fork), mats.tongue, snakeR * 1.7, -snakeR * 0.15, 0, false);
-    tongue.rotation.x = -0.5;
-    tongue.scale.x = 0;
+    fork.moveTo(0, -0.45);
+    fork.lineTo(headR * 0.9, -0.45);
+    fork.lineTo(headR * 1.4, -headR * 0.28);
+    fork.lineTo(headR * 1.05, 0);
+    fork.lineTo(headR * 1.4, headR * 0.28);
+    fork.lineTo(headR * 0.9, 0.45);
+    fork.lineTo(0, 0.45);
+    const tongue = mesh(pose, new ShapeGeometry(fork), mats.tongue, headR * 1.75, -headR * 0.16, 0, false);
+    tongue.rotation.x = -Math.PI / 2;
+    tongue.scale.x = 0.0001;
+    // The neck shows only while the head is raised: from the end of the body up to the pivot.
+    const neck = mesh(world, new CylinderGeometry(snakeR * 0.92, snakeR, 1, 16, 1, true), mats.snakeHead);
+    const mouthAt = put(pose, new Object3D(), headR * 1.6, -headR * 0.1, 0);
+    const watch = mem('snake', () => ({ yaw: spring(-2.75), lift: spring(0), jaw: spring(0), tongue: spring(0) }));
+    const replay = mem('replay', () => ({ t: -1 }));
+
+    updaters.push((frame) => {
+      const { marble, ended, played } = frame.state;
+      const t = replay.t;
+      // Nearing the end of the film the head comes up under the bell, turns to face out and opens its jaws.
+      const near = ended ? 1 : clamp((played - 0.86) / 0.14, 0, 1);
+      const swallowing = t >= 0 && t < 0.34;
+      const watching = -2.85 + 0.25 * clamp(marble.x, 0, 1);
+      let busy = move(watch.yaw, ended || swallowing ? -1.75 : watching + (-1.75 - watching) * near, 9, 0.8, frame);
+      busy = move(watch.lift, near, 10, 0.75, frame) || busy;
+      busy = move(watch.jaw, swallowing ? 1 : t >= 0.34 && t < 0.5 ? 0 : ended ? 0.8 : near * 0.3, swallowing ? 30 : 14, 0.7, frame) || busy;
+      busy = move(watch.tongue, ended && t < 0 ? 1 : 0, 22, 0.6, frame) || busy;
+      const rise = watch.lift.x * snakeR * 1.3;
+      head.position.y = neckFoot.y + rise;
+      pose.rotation.set(0, watch.yaw.x, watch.lift.x * 0.45);
+      jaw.rotation.z = -watch.jaw.x * 0.55;
+      tongue.scale.x = Math.max(0.0001, watch.tongue.x);
+      tongue.visible = watch.tongue.x > 0.02;
+      neck.visible = rise > 0.5;
+      neck.position.set(neckFoot.x, neckFoot.y + rise / 2, neckFoot.z);
+      neck.scale.y = Math.max(0.01, rise);
+      return busy;
+    });
 
     // The ladder at the start of the rail, and the tray that carries the marble up it.
-    const ladderX = railBox.start - dir * (r + 6.5);
     const ladderTop = y0 + ride + Math.sin(worldTilt(0.8)) * length + 4;
-    const ladder = put(world, new Group(), ladderX, stage.floor, shape.z + halfFoot * 0.4);
+    const ladder = put(world, new Group(), ladderX, stage.floor, ladderZ);
     const ladderHeight = ladderTop - stage.floor;
     for (const side of [-1, 1]) mesh(ladder, new CylinderGeometry(1.05, 1.05, ladderHeight, 8), mats.brassPolished, side * 4.6, ladderHeight / 2, 0);
     const rungs = Math.floor(ladderHeight / 5.2);
@@ -383,7 +452,7 @@ export function buildMachine(build: Build): Updater[] {
     const ball = mesh(rail, new SphereGeometry(r, 48, 32), mats.marble);
     const pinHeight = r * 0.9;
     const pin = mesh(rail, new CylinderGeometry(1.3, 1.5, pinHeight, 10), mats.brassPolished);
-    const motion = mem('marble', () => ({ tilt: spring(0.4), grab: spring(0), drop: spring(0), pin: spring(0), wasEnded: false, replay: -1, x: 0 }));
+    const motion = mem('marble', () => ({ tilt: spring(0.4), grab: spring(0), drop: spring(0), pin: spring(0), wasEnded: false, leftEnd: 0 }));
     const bowlRest = new Vector3(r + 5.5, rodY - r * 0.45 - bowlDepth + r * 0.95, 0);
     const scratch = new Vector3();
 
@@ -396,51 +465,59 @@ export function buildMachine(build: Build): Updater[] {
       const startX = -length;
       const railX = -(1 - marble.x) * length + rock;
 
-      // Replay from the bell: the snake swallows the marble and the ladder brings it back up.
-      if (motion.wasEnded && !ended && marble.x < 0.1 && !frame.calm) motion.replay = 0;
+      // Played again from the end: the bell tips the marble into the snake's mouth, it travels down the body to the
+      // tail at the ladder, and the ladder lifts it to the start. Asked of the playhead, not of the rolling marble,
+      // which is still on its way back when the film restarts. Dragged back instead, the marble simply rolls.
+      // The film leaves its end a moment before the playhead reports the start, so the leaving is held briefly.
+      if (motion.wasEnded && !ended) motion.leftEnd = frame.now;
+      if (motion.leftEnd && frame.now - motion.leftEnd > 0.4) motion.leftEnd = 0;
+      if (motion.leftEnd && frame.state.played < 0.1 && marble.mode !== 'drag' && replay.t < 0) {
+        motion.leftEnd = 0;
+        if (!frame.calm) replay.t = 0;
+      }
       motion.wasEnded = ended;
-      busy = move(motion.drop, ended ? 1 : 0, ended ? 13 : 20, ended ? 0.55 : 1, frame) || busy;
+      const inBell = ended || motion.leftEnd > 0 || (replay.t >= 0 && replay.t < 0.05);
+      busy = move(motion.drop, inBell ? 1 : 0, inBell ? 13 : 20, inBell ? 0.55 : 1, frame) || busy;
       busy = move(motion.grab, marble.mode === 'drag' ? 1 : 0, 40, 0.6, frame) || busy;
 
       const trayHome = scratch.set(startX - r - 6.5, rodY - shape.rodRadius - 1, 0).applyMatrix4(rail.matrixWorld).y - stage.floor;
-      const tailY = body(1).y - stage.floor - snakeR;
+      const tailY = tailEnd.y - stage.floor - snakeR * 0.6;
       tray.position.y = trayHome;
       ball.visible = true;
       ball.scale.setScalar(1 + 0.07 * motion.grab.x);
       mats.bulge.size.value = 0;
-      tongue.scale.x = 0;
-      skull.scale.y = 0.85;
+      bell.rotation.x = 0;
 
-      if (motion.replay >= 0) {
-        motion.replay += frame.dt;
-        const t = motion.replay;
+      if (replay.t >= 0) {
+        replay.t += frame.dt;
+        const t = replay.t;
         busy = true;
 
-        if (t < 0.24) {
-          // Out of the bell and into the mouth.
-          const k = ease(t / 0.24);
-          const mouth = rail.worldToLocal(scratch.copy(head.position));
+        if (t < 0.34) {
+          // The bell tips toward the open mouth and the marble rolls out of it into the snake.
+          const k = ease(t / 0.34);
+          bell.rotation.x = Math.sin(k * Math.PI) * 0.7;
+          const mouth = rail.worldToLocal(mouthAt.getWorldPosition(scratch));
           ball.position.lerpVectors(bowlRest, mouth, k);
-          ball.scale.setScalar(1 - 0.55 * k);
-          tongue.scale.x = Math.sin(k * Math.PI);
-          skull.scale.y = 0.85 + 0.3 * Math.sin(k * Math.PI);
-        } else if (t < 1.0) {
+          ball.position.y += Math.sin(k * Math.PI) * r * 0.8;
+          ball.scale.setScalar(1 - 0.5 * ease(clamp((k - 0.6) / 0.4, 0, 1)));
+        } else if (t < 1.14) {
           // Down the snake: the swelling travels from head to tail.
-          const k = (t - 0.24) / 0.76;
+          const k = (t - 0.34) / 0.8;
           ball.visible = false;
-          mats.bulge.at.value = 0.03 + 0.95 * ease(k);
+          mats.bulge.at.value = 0.02 + 0.96 * ease(k);
           mats.bulge.size.value = snakeR * 0.62 * Math.min(1, k * 8, (1 - k) * 8);
-        } else if (t < 1.36) {
+        } else if (t < 1.5) {
           // Up the ladder on the tray.
-          const k = ease((t - 1.0) / 0.36);
+          const k = ease((t - 1.14) / 0.36);
           tray.position.y = tailY + (trayHome - tailY) * k;
           ball.position.copy(rail.worldToLocal(scratch.set(ladderX, stage.floor + tray.position.y + r + 0.9, ladder.position.z + 2.5)));
-        } else if (t < 1.6) {
+        } else if (t < 1.75) {
           // Off the tray and after the playhead.
-          const k = ease((t - 1.36) / 0.24);
+          const k = ease((t - 1.5) / 0.25);
           ball.position.set(startX - r - 6.5 + (railX - startX + r + 6.5) * k, ride, 0);
         } else {
-          motion.replay = -1;
+          replay.t = -1;
         }
         ball.rotation.z = -marble.turn;
       } else {

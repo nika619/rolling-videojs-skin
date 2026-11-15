@@ -58,8 +58,9 @@ export interface MachineState {
   rock: number;
   /** Degrees the speed jack has tilted the rail. */
   tilt: number;
-  /** Share of the film that has loaded. */
+  /** Share of the film that has loaded, and that has played: where the playhead truly is, not where the marble rolls. */
   buffered: number;
+  played: number;
   volume: number;
   muted: boolean;
   /** Step of the speed jack, 0 to 5. */
@@ -205,6 +206,7 @@ export function readState(dock: HTMLElement, previous?: MachineState): MachineSt
     rock: Number.parseFloat(rail?.style.getPropertyValue('--rl-rock') ?? '') || 0,
     tilt: Number.parseFloat(rail?.style.getPropertyValue('--rl-tilt') ?? '') || 0.4,
     buffered: percent(slider, '--media-slider-buffer'),
+    played: percent(slider, '--media-slider-fill'),
     volume: percent(find(CONTROLS.shutters), '--media-slider-fill'),
     muted: horn ? horn.hasAttribute('data-muted') || horn.dataset.volumeLevel === 'off' : false,
     rate: rate === -1 ? 2 : rate,

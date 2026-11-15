@@ -309,7 +309,13 @@ export class Materials {
   readonly paper: MeshPhysicalMaterial;
   readonly rope: MeshPhysicalMaterial;
   readonly snake: MeshPhysicalMaterial;
+  /** The head and neck: the body's green paint without its diamonds, which do not lie well on a skull. */
+  readonly snakeHead: MeshPhysicalMaterial;
+  readonly snakeBelly: MeshPhysicalMaterial;
   readonly eye: MeshPhysicalMaterial;
+  /** The snake's eyes: amber, wet, and lit a little from within so they catch the light on a dark bench. */
+  readonly iris: MeshPhysicalMaterial;
+  readonly mouth: MeshPhysicalMaterial;
   readonly tongue: MeshPhysicalMaterial;
   /** Light from inside the shutter box: the film, seen through the slats. */
   readonly leak: MeshPhysicalMaterial;
@@ -453,25 +459,30 @@ export class Materials {
         vertexHead: 'uniform float uBulgeAt;\nuniform float uBulge;\nuniform float uSnakeR;',
         // The body tapers to the tail, and swells where the marble is on its way down.
         vertex: /* glsl */ `
-          float rlTaper = smoothstep(0.0, 0.02, uv.x) * (1.0 - 0.82 * smoothstep(0.8, 1.0, uv.x));
+          // The head covers the open end at uv.x = 0; the tail thins to a point round the ladder.
+          float rlTaper = 1.0 - 0.82 * smoothstep(0.8, 1.0, uv.x);
           float rlSwell = uBulge * exp(-pow((uv.x - uBulgeAt) / 0.014, 2.0));
           transformed += normal * (uSnakeR * (rlTaper - 1.0) + rlSwell);`,
         head: 'uniform vec3 uAccent;\nuniform float uMetalFilm;\nuniform float uSnakeR;\nuniform float uSnakeL;',
-        // Diamonds down the back, a pale belly.
+        // Carved and painted, like the snakes of a wooden games board: one bold diamond down the spine for every
+        // three radii, each ringed in black, green flanks, a cream belly, and fine scales cut into the paint.
         albedo: /* glsl */ `
-          vec2 rlS = vec2(vRlUv.x * uSnakeL / uSnakeR, vRlUv.y * 8.0);
-          vec2 rlG = vec2(rlS.x + rlS.y, rlS.x - rlS.y);
-          vec2 rlF = abs(fract(rlG) - 0.5);
-          float rlEdge = smoothstep(0.0, 0.1, min(rlF.x, rlF.y));
-          float rlCell = mod(floor(rlG.x) + floor(rlG.y), 2.0);
+          float rlAlong = vRlUv.x * uSnakeL / (uSnakeR * 3.2);
           // The spine is whatever faces up and out, the belly whatever faces the floor: the tube's own seam is no guide.
           float rlUp = dot(rlWorldNormal(normalize(vNormal)), vec3(0.0, 0.8, 0.6));
-          float rlBack = smoothstep(0.55, 0.8, rlUp);
-          vec3 rlBody = mix(diffuseColor.rgb * 0.5, diffuseColor.rgb, rlCell);
-          rlBody = mix(rlBody, mix(uAccent, vec3(1.0, 0.8, 0.28), 0.6), rlBack * rlCell);
-          rlBody *= mix(0.4, 1.0, rlEdge);
-          diffuseColor.rgb = mix(vec3(0.93, 0.86, 0.6), rlBody, smoothstep(-0.75, -0.45, rlUp));
-          rlH = rlEdge;`,
+          float rlAcross = acos(clamp(rlUp, -1.0, 1.0));
+          float rlShape = rlAcross / 1.15 + abs(fract(rlAlong) - 0.5) * 2.0;
+          float rlInside = smoothstep(1.0, 0.88, rlShape);
+          float rlRim = smoothstep(1.24, 1.06, rlShape) * (1.0 - rlInside);
+          vec2 rlCut = vec2(vRlUv.x * uSnakeL / (uSnakeR * 0.62), vRlUv.y * 22.0);
+          vec2 rlScale = abs(fract(vec2(rlCut.x + rlCut.y, rlCut.x - rlCut.y) * 0.5) - 0.5);
+          float rlSeam = smoothstep(0.0, 0.09, min(rlScale.x, rlScale.y));
+          vec3 rlGold = mix(uAccent, vec3(1.0, 0.78, 0.26), 0.65);
+          vec3 rlBody = mix(diffuseColor.rgb * (0.85 + 0.15 * cos(rlAcross * 2.0)), rlGold, rlInside);
+          rlBody = mix(rlBody, vec3(0.02, 0.025, 0.015), rlRim * 0.9);
+          rlBody = mix(vec3(0.9, 0.82, 0.58), rlBody, smoothstep(2.35, 2.0, rlAcross));
+          diffuseColor.rgb = rlBody * mix(0.72, 1.0, rlSeam);
+          rlH = rlSeam * 0.6 + rlInside * 0.4;`,
         normal: 'normal = rlBump(normal, rlH, 0.5);',
         glow: /* glsl */ `
           {
@@ -481,6 +492,12 @@ export class Materials {
       })
     );
     this.eye = this.#keep(new MeshPhysicalMaterial({ color: srgb(0x100a04), roughness: 0.08, clearcoat: 1 }));
+    this.snakeHead = this.#keep(new MeshPhysicalMaterial({ color: srgb(0x1d7a44), roughness: 0.34, clearcoat: 1, clearcoatRoughness: 0.12 }));
+    this.snakeBelly = this.#keep(new MeshPhysicalMaterial({ color: srgb(0xe6d29a), roughness: 0.4, clearcoat: 1, clearcoatRoughness: 0.14 }));
+    this.iris = this.#keep(
+      new MeshPhysicalMaterial({ color: srgb(0xf4b81e), roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.04, emissive: srgb(0x7a4300), emissiveIntensity: 0.7 })
+    );
+    this.mouth = this.#keep(new MeshPhysicalMaterial({ color: srgb(0x6a1018), roughness: 0.55, side: DoubleSide }));
     this.tongue = this.#keep(new MeshPhysicalMaterial({ color: srgb(0xc8262b), roughness: 0.5, side: DoubleSide }));
     this.leak = this.#keep(
       patched({ color: srgb(0x000000), roughness: 1 }, film, {
