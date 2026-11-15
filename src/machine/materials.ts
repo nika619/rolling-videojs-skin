@@ -548,7 +548,10 @@ export class Materials {
             vec3 rlFlat = rlWorldNormal(nonPerturbedNormal);
             vec3 rlR = reflect(uViewDir, normalize(mix(rlFlat, rlWorldNormal(normal), 0.4)));
             float rlFresnel = 0.04 + 0.96 * pow(1.0 - max(dot(-uViewDir, rlFlat), 0.0), 5.0);
-            totalEmissiveRadiance += rlFilm(vRlWorld, rlR, 5.0, uWoodWrap) * rlFresnel * uVarnish;
+            // Varnish over wood gives back the picture and its light, with less of its colour than metal does.
+            vec3 rlSeen = rlFilm(vRlWorld, rlR, 5.0, uWoodWrap);
+            rlSeen = mix(vec3(dot(rlSeen, vec3(0.2126, 0.7152, 0.0722))), rlSeen, 0.6);
+            totalEmissiveRadiance += rlSeen * rlFresnel * uVarnish;
           }`,
       })
     );
@@ -580,9 +583,11 @@ export class Materials {
     // Ring frequency, pores, figure contrast, roughness.
     const grain: Record<WoodKind, [Color, Color, Color, number, number, number, number, number]> = {
       deck: [woodLight, wood, woodDeep, 0.085, light ? 0.18 : 0.5, 0.75, 0.46, 1.1],
-      floor: [wood, mix(wood, woodDeep, 0.6), mix(woodDeep, new Color(0), 0.35), 0.07, light ? 0.2 : 0.55, 0.7, 0.3, 2.4],
+      // A darker board under the rail in maple too, so the rail stands out; its varnish mirrors the film softly.
+      floor: [light ? mix(wood, woodDeep, 0.5) : wood, mix(wood, woodDeep, light ? 0.85 : 0.6), mix(woodDeep, new Color(0), 0.35), 0.07, light ? 0.2 : 0.55, 0.7, 0.3, 1.6],
       lip: [mix(woodLight, wood, 0.4), mix(wood, woodDeep, 0.3), woodDeep, 0.1, light ? 0.18 : 0.5, 0.7, 0.44, 1.4],
-      beam: [mix(beam, new Color(1, 1, 1), 0.12), beam, mix(beam, srgb(0x6b4a1c), 0.5), 0.13, 0.12, 0.5, 0.5, 0.6],
+      // Boxwood, as a rule is made of: a close, pale figure that still reads as grain under the burned ticks.
+      beam: [mix(beam, new Color(1, 1, 1), 0.14), beam, mix(beam, srgb(0x6b4a1c), 0.64), 0.13, 0.22, 0.88, 0.38, 0.75],
       dark: [mix(wood, woodDeep, 0.5), woodDeep, mix(woodDeep, new Color(0), 0.5), 0.12, 0.4, 0.6, 0.55, 0.8],
       drawer: [mix(woodLight, srgb(0xb9824c), 0.5), mix(wood, srgb(0x8a5a35), 0.5), woodDeep, 0.16, 0.3, 0.9, 0.42, 1.2],
       bead: [mix(beam, new Color(1, 1, 1), 0.25), beam, mix(beam, srgb(0xb9945a), 0.6), 0.2, 0.08, 0.4, 0.36, 0.8],

@@ -160,6 +160,8 @@ export function mount(options: MountOptions): Machine {
   let stateDirty = true;
   let pointerDown = false;
   let pressed: ControlName | null = null;
+  let hovered: ControlName | null = null;
+  const canHover = matchMedia('(hover: hover) and (pointer: fine)');
   let pressedUntil = 0;
   let wake = 0;
   const free: number[] = [];
@@ -252,8 +254,10 @@ export function mount(options: MountOptions): Machine {
     key.intensity = 1.7 + 1.0 * Math.min(1, level * 1.6);
     [left, centre, right].forEach((zone, index) => {
       const lamp = zones[index]!;
-      // A third lamp, two thirds film: the wood stays wood under a blue sky.
-      linear(zone, lamp.color).lerp(tint.copy(warm).multiplyScalar(luminance(zone)), 0.3);
+      // Half the film's saturation, then a third lamp: the wood takes the film's mood without being dyed by it.
+      linear(zone, lamp.color);
+      lamp.color.lerp(tint.setScalar(lamp.color.r * 0.2126 + lamp.color.g * 0.7152 + lamp.color.b * 0.0722), 0.5);
+      lamp.color.lerp(tint.copy(warm).multiplyScalar(luminance(zone)), 0.35);
       lamp.intensity = 0.85 * (lamp.userData.reach as number) ** 2;
       linear(zone, film.uFilmZone.value[index]!);
     });
@@ -289,7 +293,7 @@ export function mount(options: MountOptions): Machine {
     if (pressed && pressedUntil && now > pressedUntil) pressed = null;
 
     const calm = reducedMotion.matches;
-    const step: Frame = { state, layout, stage, dt, now: now / 1000, calm, pressed, events };
+    const step: Frame = { state, layout, stage, dt, now: now / 1000, calm, pressed, hovered, events };
     moving = false;
     for (const update of updaters) moving = update(step) || moving;
     events.kickBack = false;
@@ -417,6 +421,19 @@ export function mount(options: MountOptions): Machine {
         stir();
       },
       { signal, capture: true, passive: true }
+    );
+  }
+  // Under a mouse, the key the pointer is over rises a little to meet it.
+  for (const type of ['pointerover', 'pointerout'] as const) {
+    dock.addEventListener(
+      type,
+      (event) => {
+        const next = type === 'pointerover' && canHover.matches ? controlAt(event.target) : null;
+        if (next === hovered) return;
+        hovered = next;
+        stir();
+      },
+      { signal, passive: true }
     );
   }
   dock.addEventListener(
