@@ -40,3 +40,24 @@ export function snapSpring(s: Spring, target: number): boolean {
   s.v = 0;
   return false;
 }
+
+/** How long a ring of this decay lasts before it is too small to draw: under half a percent. */
+export const ringSpan = (decay: number): number => 5.3 / decay;
+
+/**
+ * A struck part ringing out: a decaying oscillation `t` seconds after the strike, zero before it and once it
+ * has died away. Every reaction that shakes, trembles or wobbles is one of these.
+ */
+export function ring(t: number, freq: number, decay: number): number {
+  return t < 0 || t > ringSpan(decay) ? 0 : Math.exp(-decay * t) * Math.sin(Math.PI * 2 * freq * t);
+}
+
+/** A pulse running along the rail at `speed` px a second: 1 at its front, falling off over `width` px either side. */
+export function wave(t: number, distance: number, speed: number, width: number): number {
+  if (t < 0 || !Number.isFinite(t)) return 0;
+  const d = (distance - speed * t) / width;
+  return d * d > 16 ? 0 : Math.exp(-d * d);
+}
+
+/** One rise and fall over `length` seconds: a blink, a hop, a flick. */
+export const hump = (t: number, length: number): number => (t < 0 || t > length ? 0 : Math.sin((Math.PI * t) / length));

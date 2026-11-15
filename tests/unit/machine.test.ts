@@ -17,7 +17,7 @@ import {
   worldTilt,
 } from '../../src/machine/layout';
 import { LAMP, luminance, sameLight, smoothLight, withLamp, zoneMeans } from '../../src/machine/light';
-import { spring, stepSpring } from '../../src/machine/spring';
+import { hump, ring, ringSpan, spring, stepSpring, wave } from '../../src/machine/spring';
 
 const open = { webgl: true, saveData: false, forcedColors: false, tier: 'xl', seen: true, quality: 'high' } as const;
 
@@ -203,5 +203,25 @@ describe('mechanism springs', () => {
     }
     expect(peak).toBeGreaterThan(1.1);
     expect(firmPeak).toBeLessThanOrEqual(1.0001);
+  });
+
+  it('ring out after a strike and are still before it and once it has died away', () => {
+    expect(ring(-0.01, 5, 6)).toBe(0);
+    expect(ring(0, 5, 6)).toBe(0);
+    expect(Math.abs(ring(0.05, 5, 6))).toBeGreaterThan(0.5);
+    expect(ring(ringSpan(6) + 0.01, 5, 6)).toBe(0);
+    // Each swing is smaller than the one before.
+    expect(Math.abs(ring(0.25, 2, 3))).toBeLessThan(Math.abs(ring(0.75, 2, 3)) + Math.abs(ring(0.05, 2, 3)));
+    expect(Math.abs(ring(0.75, 1, 3))).toBeLessThan(Math.abs(ring(0.25, 1, 3)));
+  });
+
+  it('send a pulse along the rail that arrives at each point in turn', () => {
+    expect(wave(0, 0, 600, 20)).toBe(1);
+    expect(wave(0, 300, 600, 20)).toBe(0);
+    expect(wave(0.5, 300, 600, 20)).toBe(1);
+    expect(wave(1, 300, 600, 20)).toBe(0);
+    expect(wave(Number.POSITIVE_INFINITY, 300, 600, 20)).toBe(0);
+    expect(hump(0.05, 0.1)).toBe(1);
+    expect(hump(0.2, 0.1)).toBe(0);
   });
 });

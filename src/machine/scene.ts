@@ -26,10 +26,10 @@ import {
 
 import { type Activity, FRAME_WINDOW, frameGap, nextQuality, PIXEL_RATIO_CAP, PLAYBACK_FRAME_MS, type Quality } from './gate';
 import { PITCH, railShape, type Stage, stage as stageOf } from './layout';
-import { type FilmLight, LAMP, luminance, type Rgb, sameLight, smoothLight } from './light';
+import { type FilmLight, LAMP, luminance, type Rgb, sameLight, smoothLight, videoOf } from './light';
 import { filmUniforms, Materials, readPalette } from './materials';
 import { CONTROLS, type ControlName, type Layout, type MachineState, measure, readState } from './measure';
-import { buildMachine, type Frame, type Memory, type Updater } from './parts';
+import { buildMachine, type Frame, type Impulse, type ImpulseName, type Memory, type Updater } from './parts';
 import type { Post } from './post';
 
 export interface MountOptions {
@@ -61,6 +61,8 @@ export interface MachineStats {
   calls: number;
   /** Times every part was rebuilt: on a resize or a layout change, never while the film simply plays. */
   builds: number;
+  /** The last thing the machine reacted to, by impulse name. */
+  impulse: string;
 }
 
 export interface Machine {
@@ -138,7 +140,7 @@ export function mount(options: MountOptions): Machine {
   });
   pmrem.dispose();
 
-  const stats: MachineStats = { quality: options.quality, frames: 0, fps: 0, drawMs: 0, worstMs: 0, triangles: 0, calls: 0, builds: 0 };
+  const stats: MachineStats = { quality: options.quality, frames: 0, fps: 0, drawMs: 0, worstMs: 0, triangles: 0, calls: 0, builds: 0, impulse: '' };
   let quality: Quality = options.quality;
   let post: Post | null = null;
   let postLoading = false;
@@ -174,7 +176,9 @@ export function mount(options: MountOptions): Machine {
   let wake = 0;
   const free: number[] = [];
   const drawn: number[] = [];
-  const events = { kickBack: false, kickForward: false };
+  const impulses = new Map<ImpulseName, Impulse>();
+  /** Nothing ripples until a hand has touched the player: nothing animates on first load. */
+  let armed = false;
 
   const controlAt = (target: EventTarget | null): ControlName | null => {
     if (!(target instanceof Element)) return null;
@@ -190,6 +194,30 @@ export function mount(options: MountOptions): Machine {
     stateDirty = true;
     drawWanted = true;
     request();
+  };
+
+  /** Something just happened: remember when, so every part can answer it. Called from a frame, or followed by `stir`. */
+  const kick = (name: ImpulseName, strength = 1, at = performance.now(), x = state.marble.x): void => {
+    if (!armed) return;
+    impulses.set(name, { at: at / 1000, strength, x });
+    stats.impulse = name;
+    stirredAt = Math.max(stirredAt, at);
+    drawWanted = true;
+  };
+
+  /** Every change of state the dock reports is an impulse. */
+  const react = (was: MachineState, next: MachineState, at: number): void => {
+    if (next.ended && !was.ended) kick('end', 1, at);
+    if (next.paused !== was.paused && !next.ended) kick(next.paused ? 'pause' : 'play', 1, at);
+    if (next.waiting && !was.waiting) kick('wait', 1, at);
+    if (next.muted !== was.muted) kick(next.muted ? 'mute' : 'unmute', 1, at);
+    if (Math.abs(next.volume - was.volume) > 0.004) kick('volume', next.volume - was.volume, at);
+    if (next.rate !== was.rate) kick('rate', Math.sign(next.rate - was.rate), at);
+    if (next.captions !== was.captions) kick('captions', next.captions ? 1 : -1, at);
+    if (next.pip !== was.pip) kick('pip', next.pip ? 1 : -1, at);
+    if (next.drawer !== was.drawer) kick('open', next.drawer ? 1 : -1, at);
+    if (next.fullscreen !== was.fullscreen) kick('fullscreen', next.fullscreen ? 1 : -1, at);
+    if (next.chapter !== was.chapter && next.chapter >= 0) kick('chapter', next.chapter, at);
   };
 
   /** The dock mutated: read it again, and draw only if what it says has changed. */
@@ -315,6 +343,7 @@ export function mount(options: MountOptions): Machine {
       const jumped = Math.abs(next.marble.x - state.marble.x) > 0.004 || next.paused !== state.paused || next.rate !== state.rate;
       if (jumped || next.muted !== state.muted || next.drawer !== state.drawer || next.ended !== state.ended) stirredAt = now;
       if (JSON.stringify(next) !== JSON.stringify(state)) drawWanted = true;
+      react(state, next, now);
       state = next;
     }
     if (pressed && pressedUntil && now > pressedUntil) pressed = null;
@@ -327,11 +356,9 @@ export function mount(options: MountOptions): Machine {
     drawWanted = false;
 
     const calm = reducedMotion.matches;
-    const step: Frame = { state, layout, stage, dt, now: now / 1000, calm, pressed, hovered, events };
+    const step: Frame = { state, layout, stage, dt, now: now / 1000, calm, pressed, hovered, impulses };
     moving = false;
     for (const update of updaters) moving = update(step) || moving;
-    events.kickBack = false;
-    events.kickForward = false;
 
     if (!sameLight(light, lightTarget, 0.002)) {
       light = calm ? lightTarget : smoothLight(light, lightTarget, dt);
@@ -486,12 +513,24 @@ export function mount(options: MountOptions): Machine {
     'click',
     (event) => {
       const name = controlAt(event.target);
-      if (name === 'back') events.kickBack = true;
-      if (name === 'fwd') events.kickForward = true;
+      if (name) kick(name);
       stirredAt = performance.now();
       stir();
     },
     { signal, capture: true }
+  );
+  for (const type of ['pointerdown', 'keydown'] as const) {
+    container.addEventListener(type, () => (armed = true), { signal, capture: true, passive: true });
+  }
+  // Any seek at all, from the rail, a flipper, a key or the chapter menu: where the marble will land.
+  const media = videoOf(container.firstElementChild);
+  media?.addEventListener(
+    'seeking',
+    () => {
+      if (media.duration > 0) kick('seek', 1, performance.now(), media.currentTime / media.duration);
+      stir();
+    },
+    { signal }
   );
 
   canvas.addEventListener(

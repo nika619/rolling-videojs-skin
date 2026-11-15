@@ -32,7 +32,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { alongSlope, type Box, counterCells, drumTurn, heightAt, LEAN, onPanel, type Panel, PITCH, railShape, type Stage, worldTilt } from './layout';
 import type { Materials } from './materials';
 import type { ControlName, Layout, MachineState } from './measure';
-import { type Spring, snapSpring, spring, stepSpring } from './spring';
+import { hump, ring, ringSpan, type Spring, snapSpring, spring, stepSpring, wave } from './spring';
 
 export interface Frame {
   readonly state: MachineState;
@@ -46,8 +46,37 @@ export interface Frame {
   /** The control a finger or a key is holding down, and the one a mouse is over. */
   readonly pressed: ControlName | null;
   readonly hovered: ControlName | null;
-  readonly events: { kickBack: boolean; kickForward: boolean };
+  /** What has just happened to the player, by name: every action sends a ripple through the machine. */
+  readonly impulses: ReadonlyMap<ImpulseName, Impulse>;
 }
+
+/**
+ * Something the player or a hand has just done. Read from state changes (`play`, `pause`, `seek`, ...) and from
+ * clicks on a control (named after the control): `at` is seconds on the frame clock, `strength` is signed where the
+ * action has a direction (volume up or down, captions on or off), `x` is where the marble was along the rail.
+ */
+export interface Impulse {
+  readonly at: number;
+  readonly strength: number;
+  readonly x: number;
+}
+
+export type ImpulseName =
+  | ControlName
+  | 'play'
+  | 'pause'
+  | 'seek'
+  | 'end'
+  | 'wait'
+  | 'mute'
+  | 'unmute'
+  | 'volume'
+  | 'rate'
+  | 'captions'
+  | 'pip'
+  | 'open'
+  | 'fullscreen'
+  | 'chapter';
 
 /** Moves a part for this frame. True while it is still moving. */
 export type Updater = (frame: Frame) => boolean;
@@ -73,6 +102,22 @@ const clamp = (value: number, min: number, max: number): number => Math.min(max,
 const ease = (t: number): number => t * t * (3 - 2 * t);
 const move = (s: Spring, target: number, omega: number, zeta: number, frame: Frame): boolean =>
   frame.calm ? snapSpring(s, target) : stepSpring(s, target, omega, zeta, frame.dt);
+
+/** Seconds since an impulse, for a part's own mechanism, which moves whatever the motion preference. */
+const ago = (frame: Frame, name: ImpulseName): number => {
+  const impulse = frame.impulses.get(name);
+  return impulse ? Math.max(0, frame.now - impulse.at) : Number.POSITIVE_INFINITY;
+};
+/** Seconds since an impulse, for a ripple: under reduced motion there are none, so it never happened. */
+const since = (frame: Frame, name: ImpulseName): number => (frame.calm ? Number.POSITIVE_INFINITY : ago(frame, name));
+type Seen = Partial<Record<ImpulseName, number>>;
+/** True on the first frame of each new impulse of that name: for a ripple that is a kick to a spring. */
+const struck = (frame: Frame, name: ImpulseName, seen: Seen): boolean => {
+  const impulse = frame.impulses.get(name);
+  if (!impulse || seen[name] === impulse.at) return false;
+  seen[name] = impulse.at;
+  return !frame.calm && frame.now - impulse.at < 0.5;
+};
 
 function roundRect(w: number, h: number, radius: number, into: Shape | Path = new Shape()): Shape | Path {
   const r = Math.max(0.01, Math.min(radius, w / 2, h / 2));
@@ -621,7 +666,7 @@ export function buildMachine(build: Build): Updater[] {
     const reach = box.w - big - small;
     const lean = Math.asin(clamp((big - small) / reach, -1, 1));
     const outline = new Shape();
-    const turn = mem(`flipper-${name}`, () => ({ angle: spring(side * 0.157), until: 0 }));
+    const turn = mem(`flipper-${name}`, () => spring(side * 0.157));
 
     // A tapered paddle: a big round end on the pivot, a smaller one at the tip.
     outline.absarc(0, 0, big, Math.PI / 2 - lean, Math.PI * 1.5 + lean, false);
@@ -634,11 +679,13 @@ export function buildMachine(build: Build): Updater[] {
     }
     mesh(flipper, post(u * 0.9, u * 1.05, 1.6, 16), mats.brassPolished, 0, 0, 6.5);
     updaters.push((frame) => {
-      if (name === 'back' ? frame.events.kickBack : frame.events.kickForward) turn.until = frame.now + 0.11;
-      const kicked = frame.pressed === name || frame.now < turn.until;
-      const busy = move(turn.angle, side * (kicked ? -0.279 : 0.157), kicked ? 90 : 38, kicked ? 1 : 0.45, frame);
-      flipper.rotation.z = turn.angle.x;
-      return busy || frame.now < turn.until;
+      const kick = ago(frame, name);
+      const kicked = frame.pressed === name || kick < 0.11;
+      const busy = move(turn, side * (kicked ? -0.279 : 0.157), kicked ? 90 : 38, kicked ? 1 : 0.45, frame);
+      // The other flipper twitches in sympathy.
+      const other = since(frame, name === 'back' ? 'fwd' : 'back') - 0.05;
+      flipper.rotation.z = turn.x + ring(other, 9, 10) * 0.07 * side;
+      return busy || kick < 0.11 || other < ringSpan(10);
     });
   }
 
