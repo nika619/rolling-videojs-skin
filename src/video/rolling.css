@@ -1612,13 +1612,19 @@
     }
 
     .rl-counter {
-      line-height: max(calc(var(--u) * 9), 36px);
+      line-height: max(calc(var(--u) * 11), 44px);
     }
 
-    .rl-counter::before {
-      content: "";
-      position: absolute;
-      inset: -6px 0;
+    .rl-flipper,
+    .rl-drawer,
+    .rl-cord {
+      min-inline-size: 44px;
+      min-block-size: 44px;
+    }
+
+    /* The whole rail tier is the slider's hit zone. */
+    .rl-rail {
+      min-block-size: 44px;
     }
   }
 
