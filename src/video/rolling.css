@@ -1511,6 +1511,12 @@
       inline-size: calc(var(--rl-key) * 1.45);
     }
 
+    /* A shorter rail tier: the chime bars stay clear of the bench. */
+    .rl-chime {
+      transform-origin: 50% 0;
+      scale: 1 0.55;
+    }
+
     .rl-tick {
       font-size: calc(var(--u) * 2.2);
     }
