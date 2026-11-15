@@ -332,7 +332,10 @@ export function buildMachine(build: Build): Updater[] {
       const m = clamp(marble.x, 0, 1) * (count - 1);
       // Play: a wave runs down the track ahead of the marble, as if the whole rail had been woken.
       const tPlay = since(frame, 'play');
-      const rippling = tPlay < 1.6;
+      // Seek: where the marble lands, a splash spreads both ways along the track.
+      const tSeek = since(frame, 'seek');
+      const landing = (frame.impulses.get('seek')?.x ?? 0) * (count - 1);
+      const rippling = tPlay < 1.6 || tSeek < 0.9;
 
       for (let i = 0; i < count; i++) {
         const target = i / Math.max(1, count - 1) <= laid.front + 0.0005 ? 1 : 0;
@@ -359,6 +362,10 @@ export function buildMachine(build: Build): Updater[] {
         const ahead = (i - m) * gap;
         let lift = 0;
         if (rippling && ahead > 0) lift += 3 * wave(tPlay, ahead, 680, 20) * Math.exp(-ahead / 800);
+        if (tSeek < 0.9) {
+          const away = Math.abs(i - landing) * gap;
+          lift += 2.4 * wave(tSeek, away, 420, 14) * Math.exp(-away / 220);
+        }
         dummy.position.set(-length + i * gap, top + shape.sleeper / 2 + (1 - a) * 5 + laid.give[i]!.x + lift, 0);
         dummy.rotation.set((1 - a) * 1.6, 0, lift * 0.05);
         dummy.scale.setScalar(Math.max(a, 0.0001));
@@ -496,10 +503,12 @@ export function buildMachine(build: Build): Updater[] {
       const rise = watch.lift.x * snakeR * 1.3;
       head.position.y = neckFoot.y + rise + perk * snakeR * 0.7;
       pose.rotation.set(0, watch.yaw.x + ring(tPlay, 1.4, 3) * 0.22, watch.lift.x * 0.45 + perk * 0.35);
-      // Pause: the snake blinks, as if the stop had caught its eye.
+      // Pause: the snake blinks, as if the stop had caught its eye. A seek makes it blink and glance after the marble.
       const tPause = since(frame, 'pause') - 0.05;
-      const blink = hump(tPause, 0.16);
-      busy ||= tPause < 0.16;
+      const tSeek = since(frame, 'seek');
+      const blink = Math.max(hump(tPause, 0.16), hump(tSeek, 0.14));
+      busy ||= tPause < 0.16 || tSeek < ringSpan(4);
+      pose.rotation.y += ring(tSeek, 2.2, 4) * 0.2;
       for (const eyeball of eyes) eyeball.scale.y = 1 - 0.86 * blink;
       jaw.rotation.z = -watch.jaw.x * 0.55;
       tongue.scale.x = Math.max(0.0001, watch.tongue.x);
@@ -545,8 +554,9 @@ export function buildMachine(build: Build): Updater[] {
       rail.rotation.z = -worldTilt(motion.tilt.x);
       // Pause: the marble knocks on the pin and the beam shudders a pixel before it settles.
       const tPause = since(frame, 'pause');
-      rail.position.y = y0 + ring(tPause, 12, 10) * 1.2;
-      busy ||= tPause < ringSpan(10);
+      const tSeek = since(frame, 'seek');
+      rail.position.y = y0 + ring(tPause, 12, 10) * 1.2 + ring(tSeek - 0.08, 15, 14) * 0.6;
+      busy ||= tPause < ringSpan(10) || tSeek < 0.08 + ringSpan(14);
       rail.updateMatrixWorld();
       const startX = -length;
       const railX = -(1 - marble.x) * length + rock;
