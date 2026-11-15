@@ -1667,9 +1667,14 @@
 
   /* ---------- 3D: the flat artwork steps back; hit areas, icons, numerals, names and focus rings stay ---------- */
 
-  .rolling[data-machine="3d"] :is(.rl-lip, .rl-rail, .rl-bench, .rl-tape, .rl-beam, .rl-nameplate, .rl-duration, .rl-shutters-track, .rl-ball, .rl-lever-arm) {
+  .rolling[data-machine="3d"] :is(.rl-lip, .rl-rail, .rl-bench, .rl-tape, .rl-beam, .rl-nameplate, .rl-duration, .rl-shutters-track, .rl-lever-arm) {
     background: none;
     box-shadow: none;
+  }
+
+  /* The marble's ring is drawn on the ball, so only its shading goes; the ring's dark outer tone stays. */
+  .rolling[data-machine="3d"] .rl-ball {
+    background: none;
   }
 
   .rolling[data-machine="3d"] :is(.rl-key, .rl-counter, .rl-shutters-knob, .rl-drawer > .rl-icon) {
