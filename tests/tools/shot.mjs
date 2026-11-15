@@ -1,6 +1,7 @@
 // Render a page and save a PNG of one element, for looking at the skin before anyone else does.
 // node tests/tools/shot.mjs <url> <out.png> [--engine chromium|firefox|webkit] [--width 1280] [--height 900]
 //   [--selector .media-skin] [--scale 2] [--scheme dark|light] [--eval "js to run first"] [--wait 800]
+//   [--print "js whose JSON result is printed"] [--gpu 1 (real GPU instead of software WebGL)]
 import { chromium, firefox, webkit } from '@playwright/test';
 
 const [url, out, ...rest] = process.argv.slice(2);
@@ -15,7 +16,8 @@ if (!url || !out) {
 }
 
 const engine = { chromium, firefox, webkit }[option('engine', 'chromium')];
-const browser = await engine.launch();
+// Headless Chromium draws WebGL in software unless told to use the machine's GPU.
+const browser = await engine.launch(option('gpu') ? { args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] } : {});
 const page = await browser.newPage({
   viewport: { width: Number(option('width', 1280)), height: Number(option('height', 900)) },
   deviceScaleFactor: Number(option('scale', 2)),
@@ -32,6 +34,7 @@ await page.waitForTimeout(Number(option('wait', 800)));
 if (option('eval')) await page.evaluate(option('eval'));
 if (option('eval')) await page.waitForTimeout(Number(option('settle', 600)));
 
+if (option('print')) console.log(JSON.stringify(await page.evaluate(option('print')), null, 1));
 await page.locator(option('selector', '.media-skin')).first().screenshot({ path: out });
 await browser.close();
 console.log(problems.length ? `saved ${out}; errors: ${problems.join(' | ')}` : `saved ${out}`);
