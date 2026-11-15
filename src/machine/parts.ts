@@ -43,8 +43,9 @@ export interface Frame {
   readonly now: number;
   /** Reduced motion: mechanisms change state without travel. */
   readonly calm: boolean;
-  /** The control a finger or a key is holding down. */
+  /** The control a finger or a key is holding down, and the one a mouse is over. */
   readonly pressed: ControlName | null;
+  readonly hovered: ControlName | null;
   readonly events: { kickBack: boolean; kickForward: boolean };
 }
 
@@ -197,7 +198,7 @@ export function buildMachine(build: Build): Updater[] {
 
     group.position.copy(at);
     updaters.push((frame) => {
-      const busy = move(sink, frame.pressed === name || latched(frame.state) ? 1 : 0, 70, 0.8, frame);
+      const busy = move(sink, frame.pressed === name || latched(frame.state) ? 1 : frame.hovered === name ? -0.3 : 0, 70, 0.8, frame);
       group.position.z = KEY - TRAVEL * sink.x;
       return busy;
     });
@@ -819,6 +820,9 @@ export function buildMachine(build: Build): Updater[] {
 
     strip.geometry.translate(0, u * 1.3, 0);
     mesh(group, plate(w, hl, KEY, u * 1.5), mats.ivory, 0, 0, -KEY);
+    // A roll of the printing tape on brass cheeks along the key's top edge: what the key feeds from.
+    mesh(group, rod(u * 1.15, w * 0.62, 20), mats.paper, 0, hl / 2 - u * 1.2, 1.2);
+    for (const side of [-1, 1]) mesh(group, rod(u * 1.45, 1.2, 20), mats.brassPolished, side * (w * 0.31 + 0.6), hl / 2 - u * 1.2, 1.2);
     mesh(deck, new BoxGeometry(w * 0.64, 1.6, 0.6), mats.dark, at.x, at.y + hl / 2 + 1.2, 0.1, false);
     updaters.push((frame) => {
       const busy = move(feed, frame.state.captions ? 1 : 0, 24, 0.55, frame);

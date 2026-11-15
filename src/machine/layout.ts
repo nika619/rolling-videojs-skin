@@ -185,7 +185,8 @@ export function railShape(box: RailBox, s: Stage, dockHeight: number): RailShape
   // Between the beam and the deck's ridge: the snake lies tucked under the beam, and the chime bars hang in front of it.
   const strip = s.ridgeRow - footRow;
   const snakeRadius = Math.max(1.5, Math.min(r * 0.56, (strip - 2) / 2));
-  const chimeRadius = Math.max(1.6, r * 0.2);
+  // Tubular bells, full enough to catch a line of light across the room.
+  const chimeRadius = Math.max(1.8, r * 0.27);
   // How far the snake shows in front of the beam's foot.
   const reach = snakeRadius * 0.7;
   // From the back: beam and snake, chime bars, then the ridge of the deck.
