@@ -13,7 +13,7 @@
     "deploy:netlify": "npx --yes netlify-cli@27 deploy --build",
     "deploy:cloudflare": "npm run build && npx --yes wrangler@4 pages deploy dist --project-name rolling",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test --grep-invert @timing && playwright test --grep @timing --workers=1"
   },
   "dependencies": {
     "@videojs/html": "10.4.0"
