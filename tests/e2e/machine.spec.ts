@@ -174,7 +174,8 @@ test.describe('the 3D machine', () => {
     expect((await stats(page))!.frames, 'no frames once settled').toBe(settled);
 
     await controls(page).lever.click();
-    await page.waitForTimeout(1500);
+    // The click itself is interaction, drawn at full rate for a moment; the second after it is plain playback.
+    await page.waitForTimeout(2200);
     expect((await stats(page))!.fps, 'plain playback stays at or under 30 frames a second').toBeLessThanOrEqual(31);
 
     await page.evaluate(() => {
@@ -211,6 +212,22 @@ test.describe('the flat fallback', () => {
     await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.6);
     await expect.poll(() => state(page).then((s) => s.currentTime)).toBeGreaterThan(12);
     noErrors();
+  });
+
+  test('forced colours keep the flat skin, in system colours, with no canvas', async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active' });
+    await openPlayer(page, `${MACHINE}&width=1100`);
+    test.skip(!(await page.evaluate(() => matchMedia('(forced-colors: active)').matches)), 'this engine cannot emulate forced colours');
+
+    await page.waitForTimeout(1500);
+    await expect(controls(page).player).toHaveAttribute('data-machine', 'flat');
+    expect(await page.locator('rolling-machine canvas').count()).toBe(0);
+
+    // Switched on while 3D is up, the machine steps aside at once.
+    await page.emulateMedia({ forcedColors: 'none' });
+    await expect(controls(page).player).toHaveAttribute('data-machine', '3d', { timeout: 20_000 });
+    await page.emulateMedia({ forcedColors: 'active' });
+    await expect(controls(page).player).toHaveAttribute('data-machine', 'flat');
   });
 
   test('a lost context mid-play hands back to the flat skin with the film where it was', async ({ page }) => {
