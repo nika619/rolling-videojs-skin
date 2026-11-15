@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rolling: test fixture</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: light-dark(#f4f1ea, #0c0a09);
+      }
+      /* Player elements only provide state; the skin inside them is the box that gets sized. */
+      media-i18n,
+      video-player {
+        display: contents;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="root"></main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

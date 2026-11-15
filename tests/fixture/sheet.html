@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Rolling: every tier at a glance</title>
+    <style>
+      body {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: flex-start;
+        margin: 0;
+        padding: 12px;
+        background: #17171b;
+      }
+      iframe {
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      // sheet.html?w=1100,800,520,360,240,180&q=edition%3Dmaple  ->  one player per width, each in its own frame.
+      const params = new URLSearchParams(location.search);
+      const query = params.get('q') ?? '';
+      for (const width of (params.get('w') ?? '1100,800,520,360,240,180').split(',').map(Number)) {
+        const frame = document.createElement('iframe');
+        frame.src = `./?muted&width=${width}&${query}`;
+        frame.width = String(width + 32);
+        frame.height = String(Math.round((width * 9) / 16) + 200);
+        document.body.append(frame);
+      }
+    </script>
+  </body>
+</html>
