@@ -59,6 +59,8 @@ export interface MachineStats {
   worstMs: number;
   triangles: number;
   calls: number;
+  /** Times every part was rebuilt: on a resize or a layout change, never while the film simply plays. */
+  builds: number;
 }
 
 export interface Machine {
@@ -136,7 +138,7 @@ export function mount(options: MountOptions): Machine {
   });
   pmrem.dispose();
 
-  const stats: MachineStats = { quality: options.quality, frames: 0, fps: 0, drawMs: 0, worstMs: 0, triangles: 0, calls: 0 };
+  const stats: MachineStats = { quality: options.quality, frames: 0, fps: 0, drawMs: 0, worstMs: 0, triangles: 0, calls: 0, builds: 0 };
   let quality: Quality = options.quality;
   let post: Post | null = null;
   let postLoading = false;
@@ -157,6 +159,11 @@ export function mount(options: MountOptions): Machine {
   let stirredAt = 0;
   let moving = false;
   let layoutDirty = true;
+  /** Something the machine shows has changed since the last frame. */
+  let drawWanted = true;
+  /** The layout the parts were last built for, and whether the next check must rebuild whatever it finds. */
+  let built = '';
+  let forceBuild = true;
   let stateDirty = true;
   let pointerDown = false;
   let pressed: ControlName | null = null;
@@ -180,6 +187,13 @@ export function mount(options: MountOptions): Machine {
   /** Something changed: draw, and treat the next quarter second as live. */
   const stir = (): void => {
     stateDirty = true;
+    drawWanted = true;
+    request();
+  };
+
+  /** The dock mutated: read it again, and draw only if what it says has changed. */
+  const poke = (): void => {
+    stateDirty = true;
     request();
   };
 
@@ -198,7 +212,15 @@ export function mount(options: MountOptions): Machine {
 
   const rebuild = (): void => {
     layoutDirty = false;
-    layout = measure(container, dock);
+    const next = measure(container, dock);
+    // v10 toggles attributes that could move a control (hidden, data-availability) many times while a film
+    // plays without moving anything: the parts are rebuilt only when a measured rectangle has really changed.
+    const shape = JSON.stringify(next);
+    if (shape === built && !forceBuild) return;
+    built = shape;
+    forceBuild = false;
+    layout = next;
+    drawWanted = true;
     if (layout.bands.width < 2 || layout.bands.height < 2) return;
     stage = stageOf(layout.bands, layout.filmRows);
     size();
@@ -240,6 +262,7 @@ export function mount(options: MountOptions): Machine {
 
     clear(world);
     updaters = buildMachine({ materials, layout, stage, world, memory });
+    stats.builds++;
     stateDirty = true;
   };
 
@@ -267,7 +290,9 @@ export function mount(options: MountOptions): Machine {
     raf = 0;
     if (disposed || !visible || document.hidden) return;
 
-    const live = pointerDown || moving || state.marble.mode !== 'follow' || now - stirredAt < 250;
+    // Interaction draws at full rate: a hand on the machine, a thrown marble, the moments after an action, and
+    // parts still moving while the film stands. A film simply playing moves the marble too, at no more than 30.
+    const live = pointerDown || state.marble.mode !== 'follow' || now - stirredAt < 600 || (moving && (state.paused || state.ended));
     const activity: Activity = live ? 'interacting' : !state.paused && !state.ended ? 'playing' : 'settled';
     const gap = activity === 'interacting' ? frameGap(activity) : PLAYBACK_FRAME_MS;
 
@@ -288,9 +313,17 @@ export function mount(options: MountOptions): Machine {
       const next = readState(dock, state);
       const jumped = Math.abs(next.marble.x - state.marble.x) > 0.004 || next.paused !== state.paused || next.rate !== state.rate;
       if (jumped || next.muted !== state.muted || next.drawer !== state.drawer || next.ended !== state.ended) stirredAt = now;
+      if (JSON.stringify(next) !== JSON.stringify(state)) drawWanted = true;
       state = next;
     }
     if (pressed && pressedUntil && now > pressedUntil) pressed = null;
+    // A mutation that changed nothing the machine shows draws nothing: v10 rewrites some attributes to the values
+    // they already have while the film is paused, in WebKit many times a second.
+    if (!drawWanted && !moving && !pressed && now - stirredAt >= 250 && sameLight(light, lightTarget, 0.002)) {
+      lastTick = 0;
+      return;
+    }
+    drawWanted = false;
 
     const calm = reducedMotion.matches;
     const step: Frame = { state, layout, stage, dt, now: now / 1000, calm, pressed, hovered, events };
@@ -347,6 +380,7 @@ export function mount(options: MountOptions): Machine {
     post?.dispose();
     post = null;
     layoutDirty = true;
+    forceBuild = true;
     request();
   };
 
@@ -366,7 +400,7 @@ export function mount(options: MountOptions): Machine {
     for (const record of records) {
       if (record.type === 'childList' || LAYOUT_ATTRIBUTES.has(record.attributeName ?? '')) layoutDirty = true;
     }
-    stir();
+    poke();
   });
   observer.observe(dock, { attributes: true, childList: true, characterData: true, subtree: true });
 
@@ -494,6 +528,7 @@ export function mount(options: MountOptions): Machine {
       videoTexture.minFilter = LinearMipmapLinearFilter;
       videoTexture.magFilter = LinearFilter;
       film.uFilm.value = videoTexture;
+      drawWanted = true;
       request();
     },
     setVisible(next) {
