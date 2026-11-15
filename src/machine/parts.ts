@@ -875,11 +875,13 @@ export function buildMachine(build: Build): Updater[] {
     const slatWidth = w / count;
     const slats = new InstancedMesh(new BoxGeometry(slatWidth - 0.5, tall - 1, 1.1), mats.wood('bead', 0.2), count);
     const knob = mesh(group, new CapsuleGeometry(u * 1.35, alongSlope(h) * 0.86 - u * 2.7, 6, 14), mats.brassPolished, 0, 0, 9.5);
-    const level = mem('shutters', () => spring(0));
+    const level = mem('shutters', () => ({ knob: spring(0), slats: [] as Spring[] }));
     const dummy = new Object3D();
     const sign = layout.rtl ? -1 : 1;
-    let drawnAt = -1;
+    let drawn = false;
     let shaken = false;
+
+    if (level.slats.length !== count) level.slats = Array.from({ length: count }, () => spring(Number.NaN));
 
     mesh(group, bezel(w, tall, 5, 7, 2), mats.brass);
     mesh(group, plate(w + 1, tall + 1, 0.5, 2, 0.2), mats.leak, 0, 0, 0, false);
@@ -887,27 +889,35 @@ export function buildMachine(build: Build): Updater[] {
     slats.receiveShadow = true;
     group.add(slats);
     updaters.push((frame) => {
-      const busy = move(level, frame.state.volume, 30, 0.85, frame);
+      let busy = move(level.knob, frame.state.volume, 30, 0.85, frame);
       // Mute and unmute: the slats flutter on their pins, one after another.
       const tFlutter = Math.min(since(frame, 'mute'), since(frame, 'unmute'));
       const fluttering = tFlutter < count * 0.025 + ringSpan(7);
-      if (level.x === drawnAt && !fluttering && !shaken) return busy;
-      drawnAt = level.x;
-      shaken = fluttering;
-      const knobX = (level.x - 0.5) * w * sign;
+      // Volume: the film's light behind the slats swells for a moment at every change.
+      const tVolume = since(frame, 'volume');
+      mats.leakLevel.value = 2.4 * (1 + 0.9 * Math.exp(-2.2 * Math.min(tVolume, 9)));
+      const knobX = (level.knob.x - 0.5) * w * sign;
+      let changed = !drawn || fluttering || shaken;
 
       knob.position.x = knobX;
       for (let i = 0; i < count; i++) {
         const x = (i + 0.5) * slatWidth - w / 2;
-        // Slats on the played side of the knob stand open, the rest lie shut.
+        // Slats on the played side of the knob stand open, the rest lie shut. Each swings on its own pin, so as the
+        // knob passes they open one after another, each a little past and back.
         const open = ease(clamp(((knobX - x) * sign) / (slatWidth * 2.2) + 0.5, 0, 1));
+        const slat = level.slats[i]!;
+        const before = slat.x;
+        busy = (Number.isNaN(slat.x) ? snapSpring(slat, open) : move(slat, open, 24, 0.42, frame)) || busy;
+        changed ||= slat.x !== before;
         dummy.position.set(x, 0, 3.4);
-        dummy.rotation.set(0, open * 1.25 + ring(tFlutter - i * 0.025, 8, 7) * 0.3, 0);
+        dummy.rotation.set(0, slat.x * 1.25 + ring(tFlutter - i * 0.025, 8, 7) * 0.3, 0);
         dummy.updateMatrix();
         slats.setMatrixAt(i, dummy.matrix);
       }
-      slats.instanceMatrix.needsUpdate = true;
-      return busy || fluttering;
+      if (changed) slats.instanceMatrix.needsUpdate = true;
+      drawn = true;
+      shaken = fluttering;
+      return busy || fluttering || tVolume < 2.4;
     });
   }
 
