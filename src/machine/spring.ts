@@ -7,7 +7,7 @@ export interface Spring {
 export const spring = (x = 0): Spring => ({ x, v: 0 });
 
 /** Below this distance and speed a spring has arrived and is put exactly on its target. */
-const REST = 0.0005;
+const REST = 0.002;
 /** Longest integration step in seconds. Shorter steps keep stiff springs from exploding on a long frame. */
 const MAX_STEP = 0.004;
 

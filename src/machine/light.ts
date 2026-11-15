@@ -84,6 +84,8 @@ type FrameVideo = HTMLVideoElement & {
 export class FilmEye {
   /** False once the film has refused to be read; the lamp is used from then on. */
   readable = true;
+  /** True once a frame of the film has been read: its picture may be used. */
+  sampled = false;
   /** The latest reading, lamp included. */
   light: FilmLight = LAMP;
 
@@ -143,6 +145,7 @@ export class FilmEye {
       try {
         this.#context.drawImage(this.#video, 0, 0, EYE[0], EYE[1]);
         light = withLamp(zoneMeans(this.#context.getImageData(0, 0, EYE[0], EYE[1]).data, EYE[0], EYE[1]));
+        this.sampled = true;
       } catch {
         // A cross-origin film without CORS taints the canvas: keep the lamp and stop asking.
         this.readable = false;
