@@ -1,5 +1,5 @@
 @layer components {
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-button {
       width: calc(var(--media-spacing) * 8);
       height: calc(var(--media-spacing) * 8);
@@ -98,7 +98,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-dialog-backdrop {
       z-index: 40;
       background-color: #000;
@@ -182,7 +182,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-indicator {
       pointer-events: none;
       align-items: center;
@@ -297,7 +297,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     @media (forced-colors: active) {
     }
 
@@ -345,7 +345,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-status-announcer {
       white-space: nowrap;
       clip: rect(0, 0, 0, 0);
@@ -356,7 +356,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-poster {
       width: 100%;
       height: 100%;
@@ -388,25 +388,25 @@
     visibility: hidden;
   }
 
-  :where(.media-skin[data-theme="scaffold"][data-preset="video"]) .media-poster {
+  :where(.media-skin[data-theme="rolling"][data-preset="video"]) .media-poster {
     width: 100%;
     height: 100%;
     position: absolute;
     inset: 0;
   }
 
-  :where(.media-skin[data-theme="scaffold"][data-preset="video"]) .media-poster:not([data-visible]) {
+  :where(.media-skin[data-theme="rolling"][data-preset="video"]) .media-poster:not([data-visible]) {
     display: none;
   }
 
-  :where(.media-skin[data-theme="scaffold"][data-preset="video"]) .media-poster-image {
+  :where(.media-skin[data-theme="rolling"][data-preset="video"]) .media-poster-image {
     object-fit: var(--media-object-fit, contain);
     object-position: var(--media-object-position, center);
     width: 100%;
     height: 100%;
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-buffering-indicator {
       pointer-events: none;
       place-items: center;
@@ -452,7 +452,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-popup {
       color: inherit;
       border-style: solid;
@@ -579,7 +579,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-button-icon {
       width: calc(var(--media-spacing) * 4.5);
       height: calc(var(--media-spacing) * 4.5);
@@ -612,7 +612,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-menu-indicator {
       opacity: 0;
       flex-shrink: 0;
@@ -677,7 +677,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-menu-back-chevron {
       width: calc(var(--media-spacing) * 4);
       height: calc(var(--media-spacing) * 4);
@@ -918,7 +918,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     @container media-root (width < 15rem) {
       .media-settings-button {
         display: none;
@@ -938,16 +938,16 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .video-controls-slider-row {
       width: 100%;
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-slider-thumbnail {
       max-width: calc(var(--media-spacing) * 39);
       background-color: var(--media-background);
@@ -1224,7 +1224,7 @@
     }
   }
 
-  :where(.media-skin[data-theme="scaffold"][data-preset="video"]) .media-slider-thumbnail {
+  :where(.media-skin[data-theme="rolling"][data-preset="video"]) .media-slider-thumbnail {
     max-width: calc(var(--media-spacing) * 39);
     background-color: var(--media-background);
     border-radius: 0;
@@ -1232,11 +1232,11 @@
     overflow: hidden;
   }
 
-  :where(.media-skin[data-theme="scaffold"][data-preset="video"]) .media-slider-thumbnail-image {
+  :where(.media-skin[data-theme="rolling"][data-preset="video"]) .media-slider-thumbnail-image {
     display: block;
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     @container media-root (width < 15rem) {
       .media-captions-button {
         display: none;
@@ -1255,7 +1255,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-live-button {
       align-items: center;
       gap: calc(var(--media-spacing) * 1.5);
@@ -1283,7 +1283,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-button-icon-base {
       width: calc(var(--media-spacing) * 4.5);
       height: calc(var(--media-spacing) * 4.5);
@@ -1312,7 +1312,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-mute-button-high-icon {
       display: none;
     }
@@ -1334,7 +1334,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-volume-popover-popup {
       z-index: 20;
       height: calc(var(--media-spacing) * 24);
@@ -1369,7 +1369,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-volume-slider {
       cursor: pointer;
       --media-accent: var(--media-accent-color, var(--media-popover-foreground));
@@ -1448,7 +1448,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .video-controls-bottom {
       pointer-events: auto;
       gap: calc(var(--media-spacing) * 2);
@@ -1721,7 +1721,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-time-current-value {
       display: none;
     }
@@ -1813,7 +1813,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .audio-controls-bottom {
       padding: calc(var(--media-spacing) * 3);
       position: static !important;
@@ -1825,7 +1825,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     :where(.media-airplay-button)[data-airplay-state="connected"] .media-airplay-button-enter-icon,
     .media-airplay-button-exit-icon {
       display: none;
@@ -1838,13 +1838,13 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-tooltip-screen-popup {
       --media-tooltip-side-offset: calc(var(--media-spacing) * 3) !important;
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     :where(.media-cast-button)[data-cast-state="connected"] .media-cast-button-enter-icon,
     .media-cast-button-exit-icon {
       display: none;
@@ -1888,7 +1888,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-title {
       pointer-events: none;
       text-overflow: ellipsis;
@@ -1927,7 +1927,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .video-controls-backdrop {
       pointer-events: none;
       background-image: linear-gradient(to top, #00000080, #0000 40% 60%, #0006);
@@ -1950,7 +1950,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     @supports (color: color-mix(in lab, red, red)) {
     }
 
@@ -2005,7 +2005,7 @@
     }
   }
 
-  @scope (.media-skin[data-theme="scaffold"][data-preset="video"]) {
+  @scope (.media-skin[data-theme="rolling"][data-preset="video"]) {
     .media-container,
     :scope.media-container {
       border-radius: var(--media-video-border-radius);
