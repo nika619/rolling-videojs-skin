@@ -20,3 +20,4 @@ playwright-report/
 # Local agent guides from the scaffold
 CLAUDE.md
 AGENTS.md
+.claude/
