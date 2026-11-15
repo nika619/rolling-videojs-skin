@@ -66,19 +66,19 @@ describe('when the 3D machine runs', () => {
 });
 
 describe('placement from the DOM', () => {
-  const bands: Bands = { width: 1100, height: 170, lip: 28, bench: 98 };
+  const bands: Bands = { width: 1100, height: 182, lip: 28, bench: 110 };
   const s = stage(bands, 619);
 
   it('puts a point back on the screen row it was asked for', () => {
-    expect(project({ x: 40, y: 12, z: depthAt(90, 12, 170) }, 170)).toEqual({ x: 40, y: expect.closeTo(90, 6) });
-    expect(heightAt(90, depthAt(90, 12, 170), 170)).toBeCloseTo(12, 6);
+    expect(project({ x: 40, y: 12, z: depthAt(90, 12, 182) }, 182)).toEqual({ x: 40, y: expect.closeTo(90, 6) });
+    expect(heightAt(90, depthAt(90, 12, 182), 182)).toBeCloseTo(12, 6);
   });
 
   it('shows a point on the deck exactly under its control, however far it stands off the face', () => {
     for (const lift of [0, 8, 20]) {
-      const shown = project(panelToWorld(s.deck, onPanel(s.deck, 300, 134, lift)), bands.height);
+      const shown = project(panelToWorld(s.deck, onPanel(s.deck, 300, 146, lift)), bands.height);
       expect(shown.x).toBe(300);
-      expect(shown.y).toBeCloseTo(134, 6);
+      expect(shown.y).toBeCloseTo(146, 6);
     }
   });
 
@@ -87,35 +87,44 @@ describe('placement from the DOM', () => {
   });
 
   it('stands the deck on the bottom edge, the lip under the film, and the floor between them', () => {
-    expect(project(panelToWorld(s.deck, { x: 0, y: 0, z: 0 }), 170).y).toBeCloseTo(170, 6);
-    expect(project(panelToWorld(s.lip, { x: 0, y: s.lip.length, z: 0 }), 170).y).toBeCloseTo(0, 6);
+    expect(project(panelToWorld(s.deck, { x: 0, y: 0, z: 0 }), 182).y).toBeCloseTo(182, 6);
+    expect(project(panelToWorld(s.lip, { x: 0, y: s.lip.length, z: 0 }), 182).y).toBeCloseTo(0, 6);
     expect(s.floor).toBeGreaterThan(0);
     expect(s.floor).toBeLessThan(s.ridge.y);
     expect(s.film.z).toBeLessThan(s.lip.z);
     expect(s.film.height).toBeGreaterThan(619);
   });
 
-  const box: RailBox = { start: 49, end: 999, pivot: 66, marble: 49, radius: 13, beam: 20, over: 20 };
+  const box: RailBox = { start: 49, end: 999, pivot: 72, marble: 55, radius: 13, beam: 20, over: 20, chime: 14.4 };
   const rail = railShape(box, s, bands.height);
 
   it('rests the marble on two rods, where the DOM puts the slider thumb', () => {
-    expect(project({ x: 0, y: rail.marbleY, z: rail.z }, 170).y).toBeCloseTo(box.marble, 6);
+    expect(project({ x: 0, y: rail.marbleY, z: rail.z }, 182).y).toBeCloseTo(box.marble, 6);
     // Touching both rods: centre to centre is the two radii.
     expect(Math.hypot(rail.rodGap / 2, rail.marbleY - rail.rodY)).toBeCloseTo(box.radius + rail.rodRadius, 6);
     expect(rail.beamTop).toBeLessThan(rail.rodY - rail.rodRadius);
   });
 
-  it('keeps the rail behind the deck and above the floor at every tier', () => {
+  it('tucks the snake under the beam, hangs the chime bars in front of it, and keeps both behind the ridge at every tier', () => {
     for (const [b, r] of [
       [bands, box],
-      [{ width: 520, height: 118, lip: 8, bench: 58 }, { start: 30, end: 490, pivot: 36, marble: 23, radius: 9, beam: 16, over: 14 }],
-      [{ width: 360, height: 110, lip: 8, bench: 54 }, { start: 26, end: 334, pivot: 34, marble: 21, radius: 9, beam: 16, over: 10 }],
+      [{ width: 520, height: 124, lip: 8, bench: 64 }, { start: 30, end: 490, pivot: 39, marble: 26, radius: 9, beam: 16, over: 14, chime: 7.9 }],
+      [{ width: 360, height: 116, lip: 8, bench: 60 }, { start: 26, end: 334, pivot: 37, marble: 24, radius: 9, beam: 16, over: 10, chime: 7.9 }],
     ] as const) {
       const st = stage(b, (b.width * 9) / 16);
       const shape = railShape(r, st, b.height);
-      expect(shape.z + shape.beamFootWidth / 2).toBeLessThan(st.ridge.z);
-      expect(shape.beamTop - shape.beamHeight).toBeGreaterThan(st.floor);
+      const snakeRow = project({ x: 0, y: shape.snakeY, z: shape.snakeZ }, b.height).y;
+
+      expect(shape.snakeZ + shape.snakeRadius).toBeLessThan(shape.chimeZ - shape.chimeRadius);
+      expect(shape.chimeZ + shape.chimeRadius).toBeLessThan(st.ridge.z);
+      expect(shape.snakeY - shape.snakeRadius).toBeGreaterThan(st.floor);
       expect(shape.faceRow).toBeGreaterThan(r.marble);
+      // The snake shows whole between the beam and the ridge, and no bar is longer than the room it has.
+      expect(snakeRow - shape.snakeRadius).toBeGreaterThanOrEqual(shape.faceRow + r.beam - 1);
+      expect(snakeRow + shape.snakeRadius).toBeLessThan(st.ridgeRow);
+      expect(shape.snakeRadius).toBeGreaterThanOrEqual(3);
+      expect(shape.chimeRows).toBeGreaterThan(3);
+      expect(shape.chimeRows).toBeLessThanOrEqual(r.chime);
     }
   });
 

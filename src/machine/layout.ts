@@ -95,8 +95,9 @@ export interface Stage {
   readonly deck: Panel;
   /** The tape lip at the back, under the film. */
   readonly lip: Panel;
-  /** World position of the deck's top edge. */
+  /** World position of the deck's top edge, and the screen row it shows on. */
   readonly ridge: { readonly y: number; readonly z: number };
+  readonly ridgeRow: number;
   /** Height of the floor the rail stands on, between the deck and the lip. */
   readonly floor: number;
   /** The film: an upright screen standing on the lip. */
@@ -115,6 +116,7 @@ export function stage(bands: Bands, filmRows: number): Stage {
     deck,
     lip,
     ridge: { y: ridge.y, z: ridge.z },
+    ridgeRow,
     floor,
     film: { z: lipTop.z - 2, y: lipTop.y, height: Math.max(filmRows, 1) / COS_P },
   };
@@ -135,6 +137,8 @@ export interface RailBox {
   readonly beam: number;
   /** How far the beam runs past each end. */
   readonly over: number;
+  /** Length of the longest chime bar. */
+  readonly chime: number;
 }
 
 /** The rail in the world, measured from the marble: a steel ball resting on two rods. */
@@ -156,6 +160,14 @@ export interface RailShape {
   readonly beamHeight: number;
   /** Row where the beam's face begins on screen: the ruler burned into it follows this. */
   readonly faceRow: number;
+  /** The snake under the rail: its thickness, the height of its middle and its depth. */
+  readonly snakeRadius: number;
+  readonly snakeY: number;
+  readonly snakeZ: number;
+  /** The chime bars: the depth they hang at, in front of the snake, their thickness, and the longest one that fits. */
+  readonly chimeZ: number;
+  readonly chimeRadius: number;
+  readonly chimeRows: number;
 }
 
 export function railShape(box: RailBox, s: Stage, dockHeight: number): RailShape {
@@ -165,12 +177,29 @@ export function railShape(box: RailBox, s: Stage, dockHeight: number): RailShape
   const sleeper = Math.max(1.5, r * 0.17);
   const beamTopWidth = rodGap + 2 * (rodRadius + r * 0.22);
   const beamFootWidth = beamTopWidth + r * 0.85;
-  // Behind the deck's ridge, with room for the chime bars to hang in front of the floor.
-  const z = s.ridge.z - r * 0.7 - beamFootWidth / 2;
+  const lean = (beamFootWidth - beamTopWidth) / 2;
+  // The camera has no perspective, so rows do not depend on depth: the face can be placed before the rail is.
+  const marbleOverBeam = Math.sqrt((r + rodRadius) ** 2 - (rodGap / 2) ** 2) + rodRadius + sleeper;
+  const faceRow = box.marble + marbleOverBeam * COS_P + (beamTopWidth / 2) * SIN_P;
+  const footRow = faceRow + box.beam;
+  // Between the beam and the deck's ridge: the snake lies tucked under the beam, and the chime bars hang in front of it.
+  const strip = s.ridgeRow - footRow;
+  const snakeRadius = Math.max(1.5, Math.min(r * 0.56, (strip - 2) / 2));
+  const chimeRadius = Math.max(1.6, r * 0.2);
+  // How far the snake shows in front of the beam's foot.
+  const reach = snakeRadius * 0.7;
+  // From the back: beam and snake, chime bars, then the ridge of the deck.
+  const z = s.ridge.z - beamFootWidth / 2 - reach - chimeRadius * 2 - 3;
+  const snakeZ = z + beamFootWidth / 2 + reach - snakeRadius;
+  const chimeZ = z + beamFootWidth / 2 + reach + chimeRadius + 1;
   const marbleY = heightAt(box.marble, z, dockHeight);
   const rodY = marbleY - Math.sqrt((r + rodRadius) ** 2 - (rodGap / 2) ** 2);
   const beamTop = rodY - rodRadius - sleeper;
-  const lean = (beamFootWidth - beamTopWidth) / 2;
+  const beamHeight = Math.max(4, (box.beam - lean * SIN_P) / COS_P);
+  // Set back under the beam it would show a little higher: this much lower, its back meets the beam's foot.
+  const snakeY = beamTop - beamHeight - snakeRadius * 1.33 - 0.6;
+  // A bar starts at the beam's foot and may reach the ridge, no further.
+  const chimeTop = footRow + (chimeZ - z - beamFootWidth / 2) * SIN_P + 1.5;
 
   return {
     z,
@@ -182,8 +211,14 @@ export function railShape(box: RailBox, s: Stage, dockHeight: number): RailShape
     beamTop,
     beamTopWidth,
     beamFootWidth,
-    beamHeight: Math.max(4, (box.beam - lean * SIN_P) / COS_P),
-    faceRow: project({ x: 0, y: beamTop, z: z + beamTopWidth / 2 }, dockHeight).y,
+    beamHeight,
+    faceRow,
+    snakeRadius,
+    snakeY,
+    snakeZ,
+    chimeZ,
+    chimeRadius,
+    chimeRows: Math.max(3, Math.min(box.chime, s.ridgeRow - chimeTop)),
   };
 }
 
