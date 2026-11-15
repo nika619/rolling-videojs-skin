@@ -5,6 +5,7 @@
  */
 import {
   BoxGeometry,
+  BufferAttribute,
   type BufferGeometry,
   CapsuleGeometry,
   CatmullRomCurve3,
@@ -506,9 +507,12 @@ export function buildMachine(build: Build): Updater[] {
       // Pause: the snake blinks, as if the stop had caught its eye. A seek makes it blink and glance after the marble.
       const tPause = since(frame, 'pause') - 0.05;
       const tSeek = since(frame, 'seek');
-      const blink = Math.max(hump(tPause, 0.16), hump(tSeek, 0.14));
-      busy ||= tPause < 0.16 || tSeek < ringSpan(4);
-      pose.rotation.y += ring(tSeek, 2.2, 4) * 0.2;
+      // Unmute: the cork's pop makes it flinch, duck and blink.
+      const tUnmute = since(frame, 'unmute');
+      const blink = Math.max(hump(tPause, 0.16), hump(tSeek, 0.14), hump(tUnmute - 0.03, 0.14));
+      busy ||= tPause < 0.16 || tSeek < ringSpan(4) || tUnmute < ringSpan(7);
+      pose.rotation.y += ring(tSeek, 2.2, 4) * 0.2 + ring(tUnmute, 6, 7) * 0.28;
+      head.position.y -= hump(tUnmute, 0.4) * snakeR * 0.6;
       for (const eyeball of eyes) eyeball.scale.y = 1 - 0.86 * blink;
       jaw.rotation.z = -watch.jaw.x * 0.55;
       tongue.scale.x = Math.max(0.0001, watch.tongue.x);
@@ -811,9 +815,10 @@ export function buildMachine(build: Build): Updater[] {
     const rim = 12;
     const hinge = put(group, new Group(), radius * 0.7, radius * 0.7, rim - KEY);
     const pop = mem('cork', () => spring(1));
+    const lit = mem('horn-glow', () => spring(0));
     const axis = new Vector3(-1, 1, 0).normalize();
 
-    mesh(
+    const flare = mesh(
       group,
       turned([
         [radius * 0.5, 1.5],
@@ -832,12 +837,31 @@ export function buildMachine(build: Build): Updater[] {
       -KEY
     );
     mesh(group, new CircleGeometry(radius * 0.56, 28), mats.felt, 0, 0, 2 - KEY, false);
+    // Light in the throat while there is sound: brightest at the middle, gone at the rim.
+    const throat = new CircleGeometry(radius * 0.62, 28);
+    const shade = new Float32Array(throat.attributes.position!.count * 3);
+    shade.set([1, 1, 1]);
+    throat.setAttribute('color', new BufferAttribute(shade, 3));
+    const glow = mesh(group, throat, mats.hornGlow, 0, 0, 2.4 - KEY, false);
+    glow.receiveShadow = false;
     mesh(hinge, post(radius * 0.47, radius * 0.4, 9, 20), mats.cork, -radius * 0.7, -radius * 0.7, -rim + KEY - 3.5);
     mesh(hinge, new TorusGeometry(radius * 0.5, 0.7, 6, 20, Math.PI), mats.steel, -radius * 0.35, -radius * 0.35, 0.6, false).rotation.z = -Math.PI / 4;
     updaters.push((frame) => {
-      const busy = move(pop, frame.state.muted ? 0 : 1, 21, 0.36, frame);
+      let busy = move(pop, frame.state.muted ? 0 : 1, 21, 0.36, frame);
+      // Mute and unmute: the horn's bell trembles; unmuted, the cork leaps out and bounces on its bail.
+      const tMute = Math.min(since(frame, 'mute'), since(frame, 'unmute'));
+      const tUnmute = since(frame, 'unmute');
       hinge.quaternion.setFromAxisAngle(axis, pop.x * 2.15);
-      return busy;
+      hinge.position.z = rim - KEY + Math.max(0, ring(tUnmute, 3.2, 5)) * 5;
+      const tremble = 1 + ring(tMute, 13, 9) * 0.05;
+      flare.scale.set(tremble, tremble, 1);
+      // With sound on, the throat glows with the level; a change of volume swells it for a moment.
+      const { muted, volume } = frame.state;
+      const swell = Math.exp(-2.4 * Math.min(since(frame, 'volume'), 9));
+      busy = move(lit, muted ? 0 : volume * (0.45 + 0.55 * swell), 12, 1, frame) || busy;
+      mats.hornGlow.opacity = lit.x;
+      glow.visible = lit.x > 0.01;
+      return busy || tMute < ringSpan(9) || tUnmute < ringSpan(5);
     });
   }
 
@@ -855,6 +879,7 @@ export function buildMachine(build: Build): Updater[] {
     const dummy = new Object3D();
     const sign = layout.rtl ? -1 : 1;
     let drawnAt = -1;
+    let shaken = false;
 
     mesh(group, bezel(w, tall, 5, 7, 2), mats.brass);
     mesh(group, plate(w + 1, tall + 1, 0.5, 2, 0.2), mats.leak, 0, 0, 0, false);
@@ -863,8 +888,12 @@ export function buildMachine(build: Build): Updater[] {
     group.add(slats);
     updaters.push((frame) => {
       const busy = move(level, frame.state.volume, 30, 0.85, frame);
-      if (level.x === drawnAt) return busy;
+      // Mute and unmute: the slats flutter on their pins, one after another.
+      const tFlutter = Math.min(since(frame, 'mute'), since(frame, 'unmute'));
+      const fluttering = tFlutter < count * 0.025 + ringSpan(7);
+      if (level.x === drawnAt && !fluttering && !shaken) return busy;
       drawnAt = level.x;
+      shaken = fluttering;
       const knobX = (level.x - 0.5) * w * sign;
 
       knob.position.x = knobX;
@@ -873,12 +902,12 @@ export function buildMachine(build: Build): Updater[] {
         // Slats on the played side of the knob stand open, the rest lie shut.
         const open = ease(clamp(((knobX - x) * sign) / (slatWidth * 2.2) + 0.5, 0, 1));
         dummy.position.set(x, 0, 3.4);
-        dummy.rotation.set(0, open * 1.25, 0);
+        dummy.rotation.set(0, open * 1.25 + ring(tFlutter - i * 0.025, 8, 7) * 0.3, 0);
         dummy.updateMatrix();
         slats.setMatrixAt(i, dummy.matrix);
       }
       slats.instanceMatrix.needsUpdate = true;
-      return busy;
+      return busy || fluttering;
     });
   }
 
