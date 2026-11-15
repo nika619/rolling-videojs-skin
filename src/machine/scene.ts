@@ -161,6 +161,7 @@ export function mount(options: MountOptions): Machine {
   let layoutDirty = true;
   /** Something the machine shows has changed since the last frame. */
   let drawWanted = true;
+  let compiled = false;
   /** The layout the parts were last built for, and whether the next check must rebuild whatever it finds. */
   let built = '';
   let forceBuild = true;
@@ -288,7 +289,7 @@ export function mount(options: MountOptions): Machine {
 
   const frame = (now: number): void => {
     raf = 0;
-    if (disposed || !visible || document.hidden) return;
+    if (disposed || !compiled || !visible || document.hidden) return;
 
     // Interaction draws at full rate: a hand on the machine, a thrown marble, the moments after an action, and
     // parts still moving while the film stands. A film simply playing moves the marble too, at no more than 30.
@@ -502,9 +503,16 @@ export function mount(options: MountOptions): Machine {
     { signal }
   );
 
-  request();
-  // Shaders compile on the first frame; the extras for the high tier follow once it is out.
-  wake = window.setTimeout(loadPost, 300);
+  // Every shader is compiled before the first frame, off the main thread where the browser can
+  // (KHR_parallel_shader_compile): compiled on first draw, a cold start blocked the page for about four seconds.
+  // The flat skin stays until the machine is ready. The extras for the high tier follow once it is out.
+  rebuild();
+  void renderer.compileAsync(scene, camera).then(() => {
+    if (disposed) return;
+    compiled = true;
+    request();
+    wake = window.setTimeout(loadPost, 300);
+  });
 
   return {
     stats,
