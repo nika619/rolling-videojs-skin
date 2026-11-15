@@ -626,7 +626,11 @@ export function buildMachine(build: Build): Updater[] {
         ball.rotation.z = -marble.turn;
       } else {
         const d = motion.drop.x;
-        ball.position.set(railX + (bowlRest.x - 0) * ease(clamp(d * 1.5, 0, 1)), ride + motion.grab.x * 1.5 + (bowlRest.y - ride) * ease(clamp(d * 1.5 - 0.3, 0, 1.2)), 0);
+        // Skip: the flipper's kick throws the marble up off the rods, and it lands with a small bounce.
+        const tSkip = Math.min(since(frame, 'back'), since(frame, 'fwd'));
+        const hop = hump(tSkip, 0.26) * r * 0.6 + Math.abs(ring(tSkip - 0.26, 4.5, 9)) * r * 0.12;
+        busy ||= tSkip < 0.26 + ringSpan(9);
+        ball.position.set(railX + (bowlRest.x - 0) * ease(clamp(d * 1.5, 0, 1)), ride + motion.grab.x * 1.5 + hop + (bowlRest.y - ride) * ease(clamp(d * 1.5 - 0.3, 0, 1.2)), 0);
         ball.rotation.z = -marble.turn + wobble;
       }
 
@@ -769,12 +773,21 @@ export function buildMachine(build: Build): Updater[] {
     const cell = layout.counterAdvance || u * 3.2;
     const drums = Array.from({ length: 8 }, () => mesh(group, rod(drumRadius, cell - 1.3, 40), mats.drum, 0, 0, 7.5 - drumRadius, false));
     const turns = mem('counter', () => Array.from({ length: 8 }, () => spring(0)));
+    // A skip spins the seconds drums through a whole turn on their way to the new time, like a tally rolling over.
+    const spins = mem('counter-spin', () => ({ at: [spring(0), spring(0)], seen: {} as Seen }));
 
     mesh(group, bezel(w, hl, 6.5, 9.5, u), mats.brass);
     mesh(group, plate(w + 2, hl + 2, 0.6, u, 0.2), mats.dark, 0, 0, 0, false);
     updaters.push((frame) => {
       const cells = counterCells(frame.state.counter, 0, cell);
       let busy = false;
+
+      for (const [name, sign] of [['back', -1], ['fwd', 1]] as const) {
+        if (struck(frame, name, spins.seen)) for (const spin of spins.at) spin.x -= sign * TAU;
+      }
+      spins.at.forEach((spin, index) => {
+        busy = move(spin, 0, index ? 11 : 15, 0.85, frame) || busy;
+      });
 
       drums.forEach((drum, index) => {
         const shown = cells[cells.length - 1 - index];
@@ -785,7 +798,7 @@ export function buildMachine(build: Build): Updater[] {
         const target = turnSpring.x + ((((drumTurn(shown.char) - turnSpring.x) % TAU) + TAU * 1.5) % TAU) - Math.PI;
         busy = move(turnSpring, Math.abs(target - turnSpring.x) < 0.001 ? turnSpring.x : target, 34, 0.8, frame) || busy;
         drum.position.x = shown.x;
-        drum.rotation.x = -turnSpring.x;
+        drum.rotation.x = -turnSpring.x - (spins.at[index]?.x ?? 0);
       });
       return busy;
     });
