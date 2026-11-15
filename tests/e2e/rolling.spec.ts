@@ -8,6 +8,7 @@ import {
   marble,
   marbleAtRest,
   openPlayer,
+  seekSettled,
   state,
   watchConsole,
 } from './helpers';
@@ -75,12 +76,16 @@ test.describe('minimum requirements', () => {
     for (let second = 1; second <= 4; second++) {
       await page.keyboard.press('ArrowRight');
       await expect.poll(() => time(page)).toBeCloseTo(second, 1);
+      // WebKit drops a step pressed while the last seek is still landing.
+      await seekSettled(page);
     }
     await expect(counter).toHaveText(/0:04/);
     await expect(thumb).toHaveAttribute('aria-valuetext', /4 seconds/);
 
+    // WebKit can land a seek a frame late (4.01), and whole seconds are floored: 25 left, not 26.
+    const left = Math.floor(FILM_SECONDS - (await time(page)));
     await counter.click();
-    await expect(counter).toHaveText(/0:26/);
+    await expect(counter).toHaveText(new RegExp(`0:${left}`));
     await expect(counter).toHaveAccessibleName(/remaining/i);
     await counter.click();
     await expect(counter).toHaveText(/0:04/);

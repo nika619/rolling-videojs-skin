@@ -43,6 +43,14 @@ export function marble(page: Page): Promise<MarbleState> {
   return page.evaluate(() => ({ ...(document.querySelector('rolling-rail') as unknown as { marble: MarbleState }).marble }));
 }
 
+/** Wait until the film has finished seeking. */
+export async function seekSettled(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const { store } = document.querySelector('video-player') as unknown as { store: { seeking: boolean } };
+    return !store.seeking;
+  });
+}
+
 /** Wait for the marble to come to rest on the playhead. */
 export async function marbleAtRest(page: Page): Promise<MarbleState> {
   await expect
