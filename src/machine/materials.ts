@@ -4,9 +4,11 @@
  * so every board is different and every cut end is right.
  */
 import {
+  AdditiveBlending,
   Color,
   DoubleSide,
   type IUniform,
+  MeshBasicMaterial,
   MeshPhysicalMaterial,
   type MeshPhysicalMaterialParameters,
   type Texture,
@@ -196,10 +198,33 @@ vec3 rlWood(vec3 p) {
 }
 `;
 
+const METAL_HEAD = /* glsl */ `
+uniform float uMetalFilm;
+uniform vec4 uGlintLine[2];
+uniform vec4 uGlintSweep[2];
+`;
+
+// A glint is a band of light that runs along a line through some metal: down the rods ahead of the marble when the
+// film starts, across a control's brass under the mouse. Line: two world points; sweep: where the band is along the
+// line (0 to 1), how bright, how wide (in line lengths), and how far either side of the line the metal catches it.
 const METAL_GLOW = /* glsl */ `
 {
   vec3 rlR = reflect(uViewDir, rlWorldNormal(normal));
   totalEmissiveRadiance += rlFilm(vRlWorld, rlR, 2.0 + roughnessFactor * 7.0, 1.0) * diffuseColor.rgb * uMetalFilm;
+  for (int i = 0; i < 2; i++) {
+    vec4 rlS = uGlintSweep[i];
+    if (rlS.y > 0.001) {
+      vec4 rlL = uGlintLine[i];
+      vec2 rlAB = rlL.zw - rlL.xy;
+      float rlLen = max(length(rlAB), 1.0);
+      vec2 rlAP = vRlWorld.xy - rlL.xy;
+      float rlQ = dot(rlAP, rlAB) / (rlLen * rlLen);
+      float rlOff = (rlAP.x * rlAB.y - rlAP.y * rlAB.x) / rlLen;
+      float rlIn = step(0.0, rlQ) * step(rlQ, 1.0) * (1.0 - smoothstep(rlS.w * 0.75, rlS.w, abs(rlOff)));
+      float rlBand = (rlQ + rlOff / rlLen * 0.6 - rlS.x) / rlS.z;
+      totalEmissiveRadiance += vec3(1.0, 0.8, 0.52) * exp(-rlBand * rlBand) * rlIn * rlS.y * (0.35 + diffuseColor.rgb);
+    }
+  }
 }
 `;
 
@@ -288,6 +313,8 @@ export class Materials {
   readonly #accented: (IUniform<Color> | Color)[] = [];
   readonly #all: MeshPhysicalMaterial[] = [];
   readonly #metalFilm = { value: 0.38 };
+  readonly #glintLine = { value: [new Vector4(), new Vector4()] };
+  readonly #glintSweep = { value: [new Vector4(), new Vector4()] };
   #palette: Palette;
   #seed = 1;
 
@@ -325,12 +352,30 @@ export class Materials {
   readonly bench = { value: new Color() };
   /** Size of the die, for its pips. */
   readonly dieSize = { value: 12 };
+  /** Light in the horn's throat while there is sound: additive, brightest at the middle. */
+  readonly hornGlow = new MeshBasicMaterial({
+    color: srgb(0xffa04a),
+    vertexColors: true,
+    transparent: true,
+    opacity: 0,
+    blending: AdditiveBlending,
+    depthWrite: false,
+  });
+
+  /**
+   * Run a glint along a line through the metal (slot 0: the rods, slot 1: the control under the mouse).
+   * `at` is where the band is along the line, 0 to 1; a strength of 0 puts it out.
+   */
+  glint(slot: 0 | 1, from: { x: number; y: number }, to: { x: number; y: number }, at: number, strength: number, width = 0.08, reach = 4): void {
+    this.#glintLine.value[slot]!.set(from.x, from.y, to.x, to.y);
+    this.#glintSweep.value[slot]!.set(at, strength, width, reach);
+  }
 
   constructor(film: FilmUniforms, palette: Palette) {
     this.film = film;
     this.#palette = palette;
     this.bench.value.copy(palette.beam);
-    const metal = { uMetalFilm: this.#metalFilm };
+    const metal = { uMetalFilm: this.#metalFilm, uGlintLine: this.#glintLine, uGlintSweep: this.#glintSweep };
     const accent = { value: palette.accent.clone() };
     const ink = { value: srgb(0x24150a) };
     this.#accented.push(accent);
@@ -339,7 +384,7 @@ export class Materials {
       patched({ color: srgb(0xd9ab4c), metalness: 1, roughness: 0.3 }, film, {
         key: 'brass',
         uniforms: metal,
-        head: 'uniform float uMetalFilm;',
+        head: METAL_HEAD,
         // Satin: brushed along the length of the part, too fine to see as lines.
         surface: 'roughnessFactor = clamp(roughnessFactor + (rlNoise(vec3(vRlObj.x * 0.02, vRlObj.y * 0.6, vRlObj.z * 0.6)) - 0.5) * 0.07, 0.06, 1.0);',
         glow: METAL_GLOW,
@@ -349,7 +394,7 @@ export class Materials {
       patched({ color: srgb(0xe0b455), metalness: 1, roughness: 0.16 }, film, {
         key: 'metal',
         uniforms: metal,
-        head: 'uniform float uMetalFilm;',
+        head: METAL_HEAD,
         glow: METAL_GLOW,
       })
     );
@@ -357,7 +402,7 @@ export class Materials {
       patched({ color: srgb(0xe0b455), metalness: 1, roughness: 0.2, side: DoubleSide }, film, {
         key: 'metal',
         uniforms: metal,
-        head: 'uniform float uMetalFilm;',
+        head: METAL_HEAD,
         glow: METAL_GLOW,
       })
     );
@@ -374,7 +419,7 @@ export class Materials {
       patched({ color: srgb(0xcfd6db), metalness: 1, roughness: 0.14 }, film, {
         key: 'metal',
         uniforms: metal,
-        head: 'uniform float uMetalFilm;',
+        head: METAL_HEAD,
         glow: METAL_GLOW,
       })
     );
@@ -570,6 +615,7 @@ export class Materials {
 
   dispose(): void {
     for (const material of this.#all) material.dispose();
+    this.hornGlow.dispose();
   }
 
   #keep<T extends MeshPhysicalMaterial>(material: T): T {

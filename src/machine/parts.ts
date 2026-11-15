@@ -306,23 +306,33 @@ export function buildMachine(build: Build): Updater[] {
       mesh(rail, new BoxGeometry(2.2, shape.rodRadius * 2 + shape.sleeper + 2, shape.beamTopWidth), mats.brass, x, top + shape.sleeper / 2 + 0.5, 0);
     }
 
-    // Sleepers flip into place under the rods as the film loads; unloaded track has none.
+    // Sleepers flip into place under the rods as the film loads; unloaded track has none. They are also the
+    // machine's body, which every action touches: each gives a little under the marble's weight and springs back
+    // behind it, and the ripples of an action run along them as waves.
     const pitch = Math.max(9, r * 0.95);
     const count = Math.floor(length / pitch) + 1;
+    const gap = length / Math.max(1, count - 1);
     const sleepers = new InstancedMesh(new BoxGeometry(Math.max(2.2, r * 0.24), shape.sleeper, shape.beamTopWidth - 1.6), mats.wood('dark', 0.3), count);
-    const laid = mem('sleepers', () => ({ front: 0, at: new Float32Array(0) }));
+    const laid = mem('sleepers', () => ({ front: 0, at: new Float32Array(0), give: [] as Spring[] }));
     const dummy = new Object3D();
     let sleepersDrawn = false;
 
-    if (laid.at.length !== count) laid.at = new Float32Array(count).fill(-1);
+    if (laid.at.length !== count) {
+      laid.at = new Float32Array(count).fill(-1);
+      laid.give = Array.from({ length: count }, () => spring(0));
+    }
     sleepers.receiveShadow = true;
     rail.add(sleepers);
     updaters.push((frame) => {
-      const { buffered } = frame.state;
+      const { buffered, marble } = frame.state;
       // The loading runs along the rail as a front, so sleepers drop in one after another.
       laid.front = frame.calm ? buffered : clamp(buffered, laid.front - frame.dt * 2, laid.front + frame.dt * 0.9);
       let changed = !sleepersDrawn;
       let busy = laid.front !== buffered;
+      const m = clamp(marble.x, 0, 1) * (count - 1);
+      // Play: a wave runs down the track ahead of the marble, as if the whole rail had been woken.
+      const tPlay = since(frame, 'play');
+      const rippling = tPlay < 1.6;
 
       for (let i = 0; i < count; i++) {
         const target = i / Math.max(1, count - 1) <= laid.front + 0.0005 ? 1 : 0;
@@ -333,13 +343,24 @@ export function buildMachine(build: Build): Updater[] {
           changed = true;
           busy ||= to !== target;
         }
+        // The marble's weight: the sleepers under it give a pixel, and spring back with a little bounce behind it.
+        const d = i - m;
+        const give = laid.give[i]!;
+        const before = give.x;
+        const weight = to > 0.5 ? -1.1 * Math.exp(-d * d * 0.7) : 0;
+        busy = (sleepersDrawn ? move(give, weight, 60, 0.32, frame) : snapSpring(give, weight)) || busy;
+        changed ||= give.x !== before;
       }
-      if (!changed) return busy;
+      busy ||= rippling;
+      if (!changed && !rippling) return busy;
       sleepersDrawn = true;
       for (let i = 0; i < count; i++) {
         const a = Math.max(0, laid.at[i]!);
-        dummy.position.set(-length + (i * length) / Math.max(1, count - 1), top + shape.sleeper / 2 + (1 - a) * 5, 0);
-        dummy.rotation.set((1 - a) * 1.6, 0, 0);
+        const ahead = (i - m) * gap;
+        let lift = 0;
+        if (rippling && ahead > 0) lift += 3 * wave(tPlay, ahead, 680, 20) * Math.exp(-ahead / 800);
+        dummy.position.set(-length + i * gap, top + shape.sleeper / 2 + (1 - a) * 5 + laid.give[i]!.x + lift, 0);
+        dummy.rotation.set((1 - a) * 1.6, 0, lift * 0.05);
         dummy.scale.setScalar(Math.max(a, 0.0001));
         dummy.updateMatrix();
         sleepers.setMatrixAt(i, dummy.matrix);
@@ -368,7 +389,7 @@ export function buildMachine(build: Build): Updater[] {
     const bowlMesh = mesh(bell, bowl, mats.brassHollow);
     bowlMesh.rotation.x = 0.42;
     mesh(rail, new BoxGeometry(r + 4, 2.2, 3), mats.brass, r * 0.5 + 2, foot + 3, halfFoot - 2);
-    const ring = mem('bell', () => spring(0));
+    const toll = mem('bell', () => spring(0));
 
     // Snakes and ladders: the rail is the board, the die on the jack sets the pace, and this is the way home.
     // The snake lies under the beam as the return track, its head under the bell and its tail coiled round the
@@ -464,9 +485,13 @@ export function buildMachine(build: Build): Updater[] {
       busy = move(watch.lift, near, 10, 0.75, frame) || busy;
       busy = move(watch.jaw, swallowing ? 1 : t >= 0.34 && t < 0.5 ? 0 : ended ? 0.8 : near * 0.3, swallowing ? 30 : 14, 0.7, frame) || busy;
       busy = move(watch.tongue, ended && t < 0 ? 1 : 0, 22, 0.6, frame) || busy;
+      // Play: the head perks up and turns to the marble, as if it had heard the gate.
+      const tPlay = since(frame, 'play');
+      const perk = hump(tPlay, 1.1);
+      busy ||= tPlay < 1.1;
       const rise = watch.lift.x * snakeR * 1.3;
-      head.position.y = neckFoot.y + rise;
-      pose.rotation.set(0, watch.yaw.x, watch.lift.x * 0.45);
+      head.position.y = neckFoot.y + rise + perk * snakeR * 0.7;
+      pose.rotation.set(0, watch.yaw.x + ring(tPlay, 1.4, 3) * 0.22, watch.lift.x * 0.45 + perk * 0.35);
       jaw.rotation.z = -watch.jaw.x * 0.55;
       tongue.scale.x = Math.max(0.0001, watch.tongue.x);
       tongue.visible = watch.tongue.x > 0.02;
@@ -498,7 +523,9 @@ export function buildMachine(build: Build): Updater[] {
     const ball = mesh(rail, new SphereGeometry(r, 48, 32), mats.marble);
     const pinHeight = r * 0.9;
     const pin = mesh(rail, new CylinderGeometry(1.3, 1.5, pinHeight, 10), mats.brassPolished);
-    const motion = mem('marble', () => ({ tilt: spring(0.4), grab: spring(0), drop: spring(0), pin: spring(0), wasEnded: false, leftEnd: 0 }));
+    const motion = mem('marble', () => ({ tilt: spring(0.4), grab: spring(0), drop: spring(0), pin: spring(0), spin: 0, wasEnded: false, leftEnd: 0 }));
+    const rodFrom = new Vector3();
+    const rodTo = new Vector3();
     const bowlRest = new Vector3(r + 5.5, rodY - r * 0.45 - bowlDepth + r * 0.95, 0);
     const scratch = new Vector3();
 
@@ -525,6 +552,14 @@ export function buildMachine(build: Build): Updater[] {
       const inBell = ended || motion.leftEnd > 0 || (replay.t >= 0 && replay.t < 0.05);
       busy = move(motion.drop, inBell ? 1 : 0, inBell ? 13 : 20, inBell ? 0.55 : 1, frame) || busy;
       busy = move(motion.grab, marble.mode === 'drag' ? 1 : 0, 40, 0.6, frame) || busy;
+
+      // Play: the marble gives a starting wobble, and a warm glint runs down the rods ahead of it.
+      const tPlay = since(frame, 'play');
+      const wobble = ring(tPlay, 2.6, 5) * 0.4;
+      busy ||= tPlay < ringSpan(5);
+      rail.localToWorld(rodFrom.set(startX, rodY + shape.rodRadius, 0));
+      rail.localToWorld(rodTo.set(0, rodY + shape.rodRadius, 0));
+      mats.glint(0, rodFrom, rodTo, marble.x + (1.15 - marble.x) * (tPlay / 0.8), tPlay < 0.9 ? 2.2 * hump(tPlay, 0.9) : 0, 0.035, shape.rodGap + 4);
 
       const trayHome = scratch.set(startX - r - 6.5, rodY - shape.rodRadius - 1, 0).applyMatrix4(rail.matrixWorld).y - stage.floor;
       const tailY = tailEnd.y - stage.floor - snakeR * 0.6;
@@ -569,18 +604,19 @@ export function buildMachine(build: Build): Updater[] {
       } else {
         const d = motion.drop.x;
         ball.position.set(railX + (bowlRest.x - 0) * ease(clamp(d * 1.5, 0, 1)), ride + motion.grab.x * 1.5 + (bowlRest.y - ride) * ease(clamp(d * 1.5 - 0.3, 0, 1.2)), 0);
-        ball.rotation.z = -marble.turn;
+        ball.rotation.z = -marble.turn + wobble;
       }
 
-      // Pause: a brass pin comes up just ahead of the marble.
-      busy = move(motion.pin, paused && !ended && marble.mode === 'follow' ? 1 : 0, 46, 0.5, frame) || busy;
+      // Pause: a brass pin comes up just ahead of the marble. On play it drops back into the beam with a bounce.
+      const pinUp = paused && !ended && marble.mode === 'follow';
+      busy = move(motion.pin, pinUp ? 1 : 0, 46, pinUp ? 0.5 : 0.28, frame) || busy;
       pin.position.set(railX + r + shape.rodRadius + 1.2, top + shape.sleeper + pinHeight * (motion.pin.x - 0.5), 0);
-      pin.visible = motion.pin.x > 0.02;
+      pin.visible = Math.abs(motion.pin.x) > 0.02;
 
       // The bell rings as the marble lands.
-      if (ended && Math.abs(motion.drop.x - 0.8) < 0.1 && Math.abs(ring.v) < 0.5 && Math.abs(ring.x) < 0.02 && motion.drop.v > 0.5) ring.v = 5;
-      busy = move(ring, 0, 12, 0.09, frame) || busy;
-      bell.rotation.z = ring.x * 0.22;
+      if (ended && Math.abs(motion.drop.x - 0.8) < 0.1 && Math.abs(toll.v) < 0.5 && Math.abs(toll.x) < 0.02 && motion.drop.v > 0.5) toll.v = 5;
+      busy = move(toll, 0, 12, 0.09, frame) || busy;
+      bell.rotation.z = toll.x * 0.22;
       return busy;
     });
 
@@ -646,9 +682,11 @@ export function buildMachine(build: Build): Updater[] {
     mesh(arm, post(1.7, 2.1, 15, 10), mats.steel);
     mesh(arm, new SphereGeometry(u * 2.1, 24, 16), mats.enamel, 0, 0, 16);
     updaters.push((frame) => {
-      const busy = move(swing, frame.state.paused || frame.state.ended ? 1 : -1, 26, 0.5, frame);
-      arm.rotation.x = swing.x * 0.96;
-      return busy;
+      const busy = move(swing, frame.state.paused || frame.state.ended ? 1 : -1, 26, 0.42, frame);
+      // The arm twangs in its slot when it hits the stop.
+      const twang = Math.min(since(frame, 'play'), since(frame, 'pause')) - 0.12;
+      arm.rotation.x = swing.x * 0.96 + ring(twang, 7, 9) * 0.07;
+      return busy || twang < ringSpan(9);
     });
   }
 
