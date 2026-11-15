@@ -130,14 +130,14 @@ export function stepMarble(marble: Marble, dt: number, input: MarbleInput, rail:
   return { x, v, turn, mode };
 }
 
-/** The speed the pointer had when it let go, from its last tenth of a second. Rail lengths per second. */
-export function flickVelocity(samples: readonly PointerSample[], now: number, windowSeconds = 0.1): number {
+/** The speed the pointer had when it let go, from its last eighth of a second. Rail lengths per second. */
+export function flickVelocity(samples: readonly PointerSample[], now: number, windowSeconds = 0.12): number {
   const recent = samples.filter((sample) => now - sample.t <= windowSeconds);
   const first = recent[0];
   const last = recent[recent.length - 1];
 
   // A finger that paused before lifting has no fresh samples: that is a placement.
-  if (!first || !last || last.t - first.t < 0.016 || now - last.t > 0.06) return 0;
+  if (!first || !last || last.t - first.t < 0.016 || now - last.t > 0.09) return 0;
 
   return clamp((last.x - first.x) / (last.t - first.t), -FLICK_MAX_SPEED, FLICK_MAX_SPEED);
 }

@@ -157,7 +157,7 @@ describe('glide', () => {
 });
 
 describe('flickVelocity', () => {
-  it('measures the speed of the last tenth of a second', () => {
+  it('measures the speed just before release', () => {
     const samples = [0, 0.02, 0.04, 0.06, 0.08].map((t) => ({ t: 1 + t, x: 0.2 + t * 1.5 }));
 
     expect(flickVelocity(samples, 1.09)).toBeCloseTo(1.5, 5);
