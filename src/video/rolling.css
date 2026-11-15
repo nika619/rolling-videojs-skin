@@ -57,7 +57,7 @@
     --rl-key: calc(var(--u) * 12);
     --rl-icon: calc(var(--u) * 5.5);
     --rl-lip-h: calc(var(--u) * 7);
-    --rl-rail-h: calc(var(--u) * 17.5);
+    --rl-rail-h: calc(var(--u) * 20.5);
     --rl-bench-h: calc(var(--u) * 18);
     --rl-marble: calc(var(--u) * 6.5);
     --rl-beam-h: calc(var(--u) * 5);
@@ -146,8 +146,25 @@
     pointer-events: auto;
   }
 
-  .rolling > rolling-machine {
-    display: none;
+  /* The 3D machine draws under the controls. It is decoration: the controls above it stay the interface. */
+  .rl-machine {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .rl-machine-canvas {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    visibility: hidden;
+  }
+
+  .rolling[data-machine="3d"] .rl-machine-canvas {
+    visibility: visible;
   }
 
   .rl-waiting {
@@ -1431,7 +1448,7 @@
       --rl-key: calc(var(--u) * 11);
       --rl-icon: calc(var(--u) * 5);
       --rl-lip-h: calc(var(--u) * 5.5);
-      --rl-rail-h: calc(var(--u) * 15.5);
+      --rl-rail-h: calc(var(--u) * 18);
       --rl-bench-h: calc(var(--u) * 16);
       --rl-marble: calc(var(--u) * 5.5);
       --rl-beam-h: calc(var(--u) * 4.5);
@@ -1484,7 +1501,7 @@
       --rl-pad: calc(var(--u) * 2.5);
       --rl-gap: calc(var(--u) * 2);
       --rl-lip-h: calc(var(--u) * 2);
-      --rl-rail-h: calc(var(--u) * 12.5);
+      --rl-rail-h: calc(var(--u) * 14);
       --rl-bench-h: calc(var(--u) * 15);
       --rl-marble: calc(var(--u) * 4.5);
       --rl-beam-h: calc(var(--u) * 4);
@@ -1530,7 +1547,7 @@
   @container rolling (width < 420px) {
     .rl-dock {
       --rl-pad: calc(var(--u) * 2);
-      --rl-rail-h: calc(var(--u) * 11.5);
+      --rl-rail-h: calc(var(--u) * 13);
       --rl-bench-h: calc(var(--u) * 14);
       --rl-over: calc(var(--u) * 2.5);
     }
@@ -1632,6 +1649,65 @@
     .rl-rail {
       min-block-size: 44px;
     }
+  }
+
+  /* ---------- 3D: the flat artwork steps back; hit areas, icons, numerals, names and focus rings stay ---------- */
+
+  .rolling[data-machine="3d"] :is(.rl-lip, .rl-rail, .rl-bench, .rl-tape, .rl-beam, .rl-nameplate, .rl-duration, .rl-shutters-track, .rl-ball, .rl-lever-arm) {
+    background: none;
+    box-shadow: none;
+  }
+
+  .rolling[data-machine="3d"] :is(.rl-key, .rl-counter, .rl-shutters-knob, .rl-drawer > .rl-icon) {
+    background: none;
+  }
+
+  .rolling[data-machine="3d"] :is(.rl-key, .rl-counter, .rl-shutters-knob):not(:focus-visible),
+  .rolling[data-machine="3d"] .rl-drawer > .rl-icon,
+  .rolling[data-machine="3d"] .rl-marble:not(:focus-visible) .rl-ball {
+    box-shadow: none;
+  }
+
+  .rolling[data-machine="3d"] :is(.rl-track, .rl-chime, .rl-pin, .rl-ball-spin, .rl-cork, .rl-jack-rack, .rl-tapekey-strip, .rl-cord-line, .rl-shutters-open) {
+    visibility: hidden;
+  }
+
+  .rolling[data-machine="3d"] :is(.rl-lift, .rl-bell, .rl-locket)::before,
+  .rolling[data-machine="3d"] .rl-lift::after {
+    content: none;
+  }
+
+  /* The ruler stays in the DOM, burned into the 3D beam: it follows the beam's face. */
+  .rolling[data-machine="3d"] :is(.rl-ruler, .rl-chapter[data-highlighted]::before) {
+    translate: 0 var(--rl-beam-shift, 0px);
+  }
+
+  /* Before the film starts only the lever is lit: a glow on its knob, drawn here so the canvas can rest. */
+  .rolling[data-machine="3d"] .rl-lever-arm::after {
+    background: none;
+    box-shadow: none;
+  }
+
+  .rolling[data-machine="3d"] .rl-dock:not([data-started]) .rl-lever-arm::after {
+    animation-name: rl-lit-glow;
+  }
+
+  @keyframes rl-lit-glow {
+    50% {
+      box-shadow:
+        0 0 0 4px color-mix(in oklab, var(--rl-accent) 45%, transparent),
+        0 0 16px 6px var(--rl-accent);
+    }
+  }
+
+  /* A drawer comes out toward the viewer, which is up the screen. */
+  .rolling[data-machine="3d"] .rl-drawer[aria-expanded="true"] {
+    translate: 0 -4px;
+  }
+
+  /* The locket has left its felt: the icon reads light on dark. */
+  .rolling[data-machine="3d"] .rl-locket[data-pip] {
+    color: var(--rl-cream);
   }
 
   /* ---------- Full screen: the dock lies over the foot of the picture and hides when the viewer is idle ---------- */
