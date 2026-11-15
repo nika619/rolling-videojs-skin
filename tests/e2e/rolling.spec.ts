@@ -5,6 +5,7 @@ import {
   controls,
   expectFocusRing,
   FILM_SECONDS,
+  fixtureUrl,
   marble,
   marbleAtRest,
   openPlayer,
@@ -52,15 +53,12 @@ test.describe('minimum requirements', () => {
     await expect.poll(() => time(page)).toBeCloseTo(middle - 10, 0);
 
     await thumb.focus();
-    await page.keyboard.press('Home');
-    await expect.poll(() => time(page)).toBe(0);
-    await page.keyboard.press('ArrowRight');
-    await page.keyboard.press('ArrowRight');
-    await expect.poll(() => time(page)).toBeCloseTo(2, 0);
-    await page.keyboard.press('PageUp');
-    await expect.poll(() => time(page)).toBeCloseTo(12, 0);
-    await page.keyboard.press('ArrowLeft');
-    await expect.poll(() => time(page)).toBeCloseTo(11, 0);
+    // Playwright's WebKit drops a seek asked for while the last one is still landing, and lands a frame late.
+    for (const [key, second] of [['Home', 0], ['ArrowRight', 1], ['ArrowRight', 2], ['PageUp', 12], ['ArrowLeft', 11]] as const) {
+      await seekSettled(page);
+      await page.keyboard.press(key);
+      await expect.poll(() => time(page)).toBeCloseTo(second, 0);
+    }
     expect((await marbleAtRest(page)).x).toBeCloseTo(11 / FILM_SECONDS, 1);
     noErrors();
   });
@@ -282,6 +280,10 @@ test.describe('the rail', () => {
   });
 
   test.describe('thrown @timing', () => {
+  // Measured: Playwright's WebKit on Windows decodes and paints each seek of a drag in software, about 200 ms at 2x,
+  // and stamps pointer events when it gets round to them, so a quick lift reads as a pause. At 1x it keeps up.
+  test.use({ deviceScaleFactor: 1 });
+
 
   test('a flicked marble rolls on with momentum and the film follows it', async ({ page }) => {
     // The flick is made of real pointer events a few milliseconds apart. A browser starved by its neighbours delivers
@@ -484,7 +486,7 @@ test.describe('editions and states', () => {
   });
 
   test('a film that cannot load shows the tray, and it can be dismissed from the keyboard', async ({ page }) => {
-    await page.goto('/?muted&src=broken');
+    await page.goto(fixtureUrl('src=broken'));
     const tray = page.getByRole('alertdialog');
 
     await expect(tray).toBeVisible({ timeout: 15_000 });

@@ -22,9 +22,15 @@ export interface MarbleState {
 
 export const FILM_SECONDS = 30;
 
-/** Open the fixture and wait until the film's length is known. Muted, so every engine lets it play. */
+/** The fixture's query: muted, so every engine lets it play, and the flat skin unless the test names a machine. */
+export function fixtureUrl(query = ''): string {
+  // 3D depends on the GPU of whatever runs the tests; the tests of the machine itself ask for it by name.
+  return `/?muted&${/(^|&)machine=/.test(query) ? '' : 'machine=flat&'}${query}`;
+}
+
+/** Open the fixture and wait until the film's length is known. */
 export async function openPlayer(page: Page, query = ''): Promise<void> {
-  await page.goto(`/?muted&${query}`);
+  await page.goto(fixtureUrl(query));
   await page.waitForFunction(() => {
     const player = document.querySelector('video-player') as (HTMLElement & { store?: { duration: number } }) | null;
     return (player?.store?.duration ?? 0) > 0;
