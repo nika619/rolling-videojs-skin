@@ -2,6 +2,7 @@
 // node tests/tools/shot.mjs <url> <out.png> [--engine chromium|firefox|webkit] [--width 1280] [--height 900]
 //   [--selector .media-skin] [--scale 2] [--scheme dark|light] [--eval "js to run first"] [--wait 800]
 //   [--print "js whose JSON result is printed"] [--gpu 1 (real GPU instead of software WebGL)]
+//   [--clip x,y,w,h (a part of the element, in CSS pixels from its corner)]
 import { chromium, firefox, webkit } from '@playwright/test';
 
 const [url, out, ...rest] = process.argv.slice(2);
@@ -35,6 +36,13 @@ if (option('eval')) await page.evaluate(option('eval'));
 if (option('eval')) await page.waitForTimeout(Number(option('settle', 600)));
 
 if (option('print')) console.log(JSON.stringify(await page.evaluate(option('print')), null, 1));
-await page.locator(option('selector', '.media-skin')).first().screenshot({ path: out });
+const target = page.locator(option('selector', '.media-skin')).first();
+if (option('clip')) {
+  const [x, y, width, height] = option('clip').split(',').map(Number);
+  const box = await target.boundingBox();
+  await page.screenshot({ path: out, clip: { x: box.x + x, y: box.y + y, width, height } });
+} else {
+  await target.screenshot({ path: out });
+}
 await browser.close();
 console.log(problems.length ? `saved ${out}; errors: ${problems.join(' | ')}` : `saved ${out}`);
