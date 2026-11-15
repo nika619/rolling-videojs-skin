@@ -447,12 +447,16 @@ export function buildMachine(build: Build): Updater[] {
     // The jaw in the belly's cream: it draws the line of the mouth, which is what makes the shape a head.
     mesh(jaw, new SphereGeometry(headR * 0.95, 28, 12, 0, TAU, Math.PI / 2, Math.PI / 2), mats.snakeBelly, headR * 0.75, 0, 0).scale.set(1.25, 0.46, 0.86);
     mesh(pose, new SphereGeometry(headR * 0.8, 18, 10), mats.mouth, headR * 0.9, -headR * 0.14, 0, false).scale.set(1.2, 0.2, 0.78);
+    const eyes: Group[] = [];
     for (const side of [-1, 1]) {
       const eyeR = headR * 0.32;
       const out = new Vector3(0.3, 0.45, side * 0.85).normalize();
       const eye = put(pose, new Group(), headR * 1.1, headR * 0.38, side * headR * 0.72);
-      mesh(eye, new SphereGeometry(eyeR, 20, 14), mats.iris, 0, 0, 0, false);
-      mesh(eye, new SphereGeometry(eyeR * 0.5, 12, 10), mats.eye, out.x * eyeR * 0.75, out.y * eyeR * 0.75, out.z * eyeR * 0.75, false).scale.set(0.36, 1.2, 0.36);
+      // The eyeball shuts to a slit under the brow when the snake blinks.
+      const eyeball = put(eye, new Group());
+      eyes.push(eyeball);
+      mesh(eyeball, new SphereGeometry(eyeR, 20, 14), mats.iris, 0, 0, 0, false);
+      mesh(eyeball, new SphereGeometry(eyeR * 0.5, 12, 10), mats.eye, out.x * eyeR * 0.75, out.y * eyeR * 0.75, out.z * eyeR * 0.75, false).scale.set(0.36, 1.2, 0.36);
       // A brow over each eye: what makes a carved snake look watchful rather than surprised.
       const brow = mesh(eye, new SphereGeometry(eyeR * 1.2, 16, 8, 0, TAU, 0, Math.PI * 0.4), mats.snakeHead, -eyeR * 0.15, eyeR * 0.2, side * eyeR * 0.1);
       brow.rotation.x = side * 0.35;
@@ -492,6 +496,11 @@ export function buildMachine(build: Build): Updater[] {
       const rise = watch.lift.x * snakeR * 1.3;
       head.position.y = neckFoot.y + rise + perk * snakeR * 0.7;
       pose.rotation.set(0, watch.yaw.x + ring(tPlay, 1.4, 3) * 0.22, watch.lift.x * 0.45 + perk * 0.35);
+      // Pause: the snake blinks, as if the stop had caught its eye.
+      const tPause = since(frame, 'pause') - 0.05;
+      const blink = hump(tPause, 0.16);
+      busy ||= tPause < 0.16;
+      for (const eyeball of eyes) eyeball.scale.y = 1 - 0.86 * blink;
       jaw.rotation.z = -watch.jaw.x * 0.55;
       tongue.scale.x = Math.max(0.0001, watch.tongue.x);
       tongue.visible = watch.tongue.x > 0.02;
@@ -534,6 +543,10 @@ export function buildMachine(build: Build): Updater[] {
       let busy = move(motion.tilt, tilt, 15, 0.55, frame);
 
       rail.rotation.z = -worldTilt(motion.tilt.x);
+      // Pause: the marble knocks on the pin and the beam shudders a pixel before it settles.
+      const tPause = since(frame, 'pause');
+      rail.position.y = y0 + ring(tPause, 12, 10) * 1.2;
+      busy ||= tPause < ringSpan(10);
       rail.updateMatrixWorld();
       const startX = -length;
       const railX = -(1 - marble.x) * length + rock;
@@ -621,7 +634,7 @@ export function buildMachine(build: Build): Updater[] {
     });
 
     // Chapters: a chime bar hangs where each one starts, and swings when the marble passes.
-    const swings = mem('chimes', () => ({ at: [] as Spring[], x: -1, started: false }));
+    const swings = mem('chimes', () => ({ at: [] as Spring[], x: -1, started: false, seen: {} as Seen }));
     const bars = layout.chapters.map((chapter, index) => {
       const hang = put(rail, new Group(), -length + chapter.at * length, foot - 1, shape.chimeZ - shape.z);
       const barLength = Math.min(chapter.length, shape.chimeRows) / COS_P;
@@ -646,6 +659,14 @@ export function buildMachine(build: Build): Updater[] {
           const passed = index === 0 ? frame.state.started && !swings.started : (swings.x - chapter.at) * (x - chapter.at) < 0;
           if (passed) swings.at[index]!.v += (x >= swings.x ? -1 : 1) * 3.2;
         });
+      }
+      // Pause: the knock carries down the beam and the nearest chime trembles.
+      if (struck(frame, 'pause', swings.seen) && layout.chapters.length) {
+        let near = 0;
+        layout.chapters.forEach((chapter, index) => {
+          if (Math.abs(chapter.at - x) < Math.abs(layout.chapters[near]!.at - x)) near = index;
+        });
+        swings.at[near]!.v += 1.3;
       }
       swings.x = x;
       swings.started = frame.state.started;
