@@ -163,6 +163,8 @@ export function mount(options: MountOptions): Machine {
   let lastDraw = 0;
   let lastTick = 0;
   let lastFree = 0;
+  // Frames before this time (after a resize) are not judged.
+  let quietUntil = 0;
   let stirredAt = 0;
   let moving = false;
   let layoutDirty = true;
@@ -378,7 +380,7 @@ export function mount(options: MountOptions): Machine {
     else renderer.render(scene, camera);
 
     // Frame gaps only count while frames follow each other without a pause.
-    if (lastFree && now - lastFree < 100 && activity === 'interacting') {
+    if (lastFree && now - lastFree < 100 && activity === 'interacting' && now > quietUntil) {
       free.push(now - lastFree);
       if (free.length >= FRAME_WINDOW) {
         stats.worstMs = Math.max(...free);
@@ -450,6 +452,9 @@ export function mount(options: MountOptions): Machine {
   skinObserver.observe(container, { attributes: true, attributeOldValue: true, attributeFilter: ['data-edition', 'data-tier', 'style', 'class', 'dir'] });
 
   const resize = new ResizeObserver(() => {
+    // A resize (entering full screen, turning a phone) rebuilds every part; those frames say nothing about the device.
+    free.length = 0;
+    quietUntil = performance.now() + 1500;
     layoutDirty = true;
     stir();
   });
