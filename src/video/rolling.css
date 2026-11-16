@@ -1437,8 +1437,9 @@
       0 6px 7px -1px rgb(0 0 0 / 0.5);
   }
 
+  /* Connected: bright brass (7.5:1 on the arm); the accent orange was 3.6:1 on this wood. */
   .rl-catapult:is([data-cast-state="connected"], [data-airplay-state="connected"]) {
-    color: var(--rl-accent);
+    color: var(--rl-brass-light);
   }
 
   /* Settings: a drawer in the bench. The knob carries the gear. */
