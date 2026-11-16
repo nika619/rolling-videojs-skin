@@ -57,7 +57,7 @@
             <tr><td>9</td><th scope="row">Mute</th><td>A cork in the brass horn. Pull it and the sound comes back with a pop.</td><td>Mute button</td></tr>
             <tr><td>10</td><th scope="row">Volume</th><td>Swell shutters, as on a pipe organ: the slats open with the volume and the film's light leaks between them.</td><td>Volume slider</td></tr>
             <tr><td>11</td><th scope="row">Speed</th><td>A ratchet jack tilts the rail; steeper is faster. A die climbs the rack: six speeds, six faces.</td><td>Playback rate</td></tr>
-            <tr><td>12</td><th scope="row">Captions</th><td>A paper roll on a key feeds its strip as captions come on.</td><td>Captions button</td></tr>
+            <tr><td>12</td><th scope="row">Captions</th><td>Captions print on a paper tape in the lip under the picture, a brass carriage running ahead of the ink. They never cover the film or sit under the controls.</td><td>Captions button</td></tr>
             <tr><td>13</td><th scope="row">Picture-in-picture</th><td>A brass locket opens on the live film inside it, then leaves the bench.</td><td>PiP button</td></tr>
             <tr><td>14</td><th scope="row">Settings</th><td>A felt-lined drawer slides down the slope; each setting is a peg in a hole.</td><td>Settings menu</td></tr>
             <tr><td>15</td><th scope="row">Full screen</th><td>A pull cord with a wooden bead.</td><td>Fullscreen button</td></tr>
@@ -120,7 +120,8 @@
           <ul>
             <li>Inline, no control sits on the picture: the dock is solid wood under it, so contrast never depends on the footage (the problem behind <a href="https://github.com/videojs/video.js/pull/9675">#9675</a>).</li>
             <li>A two-tone focus ring that shows on walnut, maple and light video alike (<a href="https://github.com/videojs/video.js/issues/9705">#9705</a>). Keyboard order matches visual order; Escape leaves the drawer and returns focus to its key; Video.js hotkeys, gestures and the status announcer are kept.</li>
-            <li>Reduced motion: the marble slides without momentum or spin, mechanisms change state without travel, nothing ripples. Forced colours and no WebGL: the flat skin, complete on its own, takes over.</li>
+            <li>Captions print on a paper tape in a lip under the picture, so they never cover the film and never collide with the controls (<a href="https://github.com/videojs/video.js/issues/9420">#9420</a>, <a href="https://github.com/videojs/video.js/issues/9303">#9303</a>). In full screen, when the controls hide, the tape stays.</li>
+            <li>Reduced motion: the marble slides without momentum or spin, mechanisms change state without travel, nothing ripples, and captions appear without the printing sweep. Forced colours and no WebGL: the flat skin, complete on its own, takes over.</li>
             <li>axe-core: no violations at 1100, 520 and 240 px, at rest, playing and with the drawer open, in Chromium, Firefox and WebKit. One rule is filtered and said here: <code>label-content-name-mismatch</code> on the time counter, from Video.js's own <code>&lt;media-time toggle&gt;</code>, whose name reads “Show remaining time” while it shows the elapsed time.</li>
           </ul>
         </article>
