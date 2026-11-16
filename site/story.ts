@@ -14,89 +14,68 @@ export function start(): void {
   ScrollTrigger.refresh();
 }
 
-/** The plan: the camera travels the dock part by part; each part lights from line drawing to wood as it is named. */
+/** The plan: the playhead sweeps the dock in, then a brass loupe travels it part by part while the room dims around it. */
 function plan(): void {
   const section = document.querySelector<HTMLElement>('.plan.is-scene');
   if (!section) return;
-  const stage = section.querySelector<HTMLElement>('.plan-stage')!;
   const view = section.querySelector<HTMLElement>('.plan-view')!;
   const art = section.querySelector<HTMLElement>('.plan-art')!;
-  const mask = section.querySelector('mask')!;
-  const all = section.querySelector('.lit-all')!;
-  const line = section.querySelector('.leader polyline')!;
-  const dot = section.querySelector('.leader circle')!;
-  const parts = [...section.querySelectorAll<HTMLLIElement>('.parts li')].map((li) => {
-    const x = (Number(li.dataset.x) / 100) * ART.w;
-    const y = (Number(li.dataset.y) / 100) * ART.h;
-    const spot = document.createElementNS(NS, 'circle');
-    spot.setAttribute('cx', String(x));
-    spot.setAttribute('cy', String(y));
-    spot.setAttribute('r', '0');
-    spot.setAttribute('fill', 'url(#spot)');
-    mask.append(spot);
-    return { li, x, y, r: Number(li.dataset.r) * 1.35, spot };
-  });
+  const lens = [section.querySelector('.spot')!, section.querySelector('.loupe')!];
+  const shade = section.querySelector('.plan-shade')!;
+  const reveal = section.querySelector('.reveal')!;
+  const edge = section.querySelector('.plan-edge')!;
+  // The camera needs the full-size picture; it loads now, after the machine has mounted.
+  for (const image of section.querySelectorAll('.plan-dock')) image.setAttribute('href', './img/dock-6600.webp');
+  const parts = [...section.querySelectorAll<HTMLLIElement>('.parts li')].map((li) => ({
+    li,
+    x: (Number(li.dataset.x) / 100) * ART.w,
+    y: (Number(li.dataset.y) / 100) * ART.h,
+    r: Number(li.dataset.r) * 1.1,
+  }));
   section.style.setProperty('--steps', String(parts.length + 1));
   art.style.cssText = 'position:absolute;inset:0 auto auto 0;inline-size:100%';
 
   const width = (): number => view.clientWidth;
   const height = (): number => (width() * ART.h) / ART.w;
-  const zoom = (): number => Math.min(6, Math.max(2.2, (view.clientHeight * 0.72) / height()));
-  const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
-  // Where the art sits to put point (x, y) at the middle of the view, without showing past its ends.
-  const shot = (p?: { x: number; y: number }): gsap.TweenVars => ({
-    scale: () => (p ? zoom() : 1),
-    x: () => (p ? clamp(width() / 2 - (zoom() * p.x * width()) / ART.w, width() - zoom() * width(), 0) : 0),
-    y: () => {
-      const s = p ? zoom() : 1;
-      const h = s * height();
-      const vh = view.clientHeight;
-      if (!p || h <= vh) return (vh - h) / 2;
-      return clamp(vh / 2 - (s * p.y * height()) / ART.h, vh - h, 0);
-    },
+  // Each part fills most of the view's height inside its loupe, but never closer than the picture's
+  // 6600 px of detail allow at this screen's density.
+  const zoom = (p: { r: number }): number => {
+    const most = Math.min(6, 7200 / (width() * (window.devicePixelRatio || 1)));
+    return Math.min(most, (view.clientHeight * 0.84) / ((2 * p.r * height()) / ART.h));
+  };
+  // Where the art sits to put the part at the middle of the view; past the dock's ends the page shows.
+  const shot = (p?: { x: number; y: number; r: number }): gsap.TweenVars => ({
+    scale: () => (p ? zoom(p) : 1),
+    x: () => (p ? width() / 2 - (zoom(p) * p.x * width()) / ART.w : 0),
+    y: () => (p ? view.clientHeight / 2 - (zoom(p) * p.y * height()) / ART.h : (view.clientHeight - height()) / 2),
   });
 
-  gsap.set(all, { opacity: 0 });
   gsap.set(art, shot());
+  gsap.set(reveal, { attr: { width: 0 } });
+  gsap.set(edge, { attr: { x: 0 }, opacity: 0.85 });
+  gsap.set(lens, { attr: { cx: parts[0]!.x, cy: parts[0]!.y, r: 0 } });
   gsap.set(parts.map((p) => p.li), { autoAlpha: 0, y: 16 });
-
-  const leader = (): void => {
-    let best = parts[0]!;
-    let alpha = 0;
-    for (const p of parts) {
-      const a = Number(gsap.getProperty(p.li, 'opacity'));
-      if (a > alpha) [best, alpha] = [p, a];
-    }
-    const s = Number(gsap.getProperty(art, 'scale'));
-    const box = stage.getBoundingClientRect();
-    const v = view.getBoundingClientRect();
-    const px = v.left - box.left + Number(gsap.getProperty(art, 'x')) + (s * best.x * width()) / ART.w;
-    const py = v.top - box.top + Number(gsap.getProperty(art, 'y')) + (s * best.y * height()) / ART.h;
-    const h3 = best.li.querySelector('h3')!.getBoundingClientRect();
-    const lx = h3.left - box.left + 6;
-    const ly = h3.top - box.top - 14;
-    const knee = Math.min(ly - 12, Math.max(py + 28, v.bottom - box.top + 8));
-    line.setAttribute('points', `${lx},${ly} ${px},${knee} ${px},${py + 9}`);
-    dot.setAttribute('cx', String(px));
-    dot.setAttribute('cy', String(py));
-    (line.parentNode as SVGElement).style.opacity = String(alpha);
-  };
 
   const tl = gsap.timeline({
     defaults: { ease: 'power2.inOut' },
-    onUpdate: leader,
     scrollTrigger: { trigger: section.querySelector('.plan-track'), start: 'top top', end: 'bottom bottom', scrub: 0.6, invalidateOnRefresh: true },
   });
-  tl.to({}, { duration: 0.4 });
-  for (const p of parts) {
-    tl.to(art, { ...shot(p), duration: 1 });
-    tl.to(p.spot, { attr: { r: p.r }, duration: 0.7, ease: 'power2.out' }, '<0.45');
-    tl.to(p.li, { autoAlpha: 1, y: 0, duration: 0.35, ease: 'power2.out' }, '<0.1');
-    tl.to({}, { duration: 0.7 });
-    tl.to(p.li, { autoAlpha: 0, y: -12, duration: 0.3, ease: 'power1.in' });
+  // The playhead crosses the dock and the machine appears behind it.
+  tl.to(reveal, { attr: { width: ART.w }, duration: 1.4, ease: 'none' });
+  tl.to(edge, { attr: { x: ART.w - 5 }, duration: 1.4, ease: 'none' }, 0);
+  tl.to(edge, { opacity: 0, duration: 0.2 }, 1.3);
+  for (const [i, p] of parts.entries()) {
+    const t = tl.duration();
+    tl.to(art, { ...shot(p), duration: 1 }, t);
+    tl.to(lens, { attr: { cx: p.x, cy: p.y, r: p.r }, duration: 1 }, t);
+    if (i === 0) tl.to(shade, { opacity: 0.62, duration: 0.6 }, t + 0.2);
+    tl.to(p.li, { autoAlpha: 1, y: 0, duration: 0.35, ease: 'power2.out' }, t + 0.55);
+    tl.to(p.li, { autoAlpha: 0, y: -12, duration: 0.3, ease: 'power1.in' }, t + 1.6);
   }
-  tl.to(art, { ...shot(), duration: 1 });
-  tl.to(all, { opacity: 1, duration: 0.6 }, '<0.3');
+  const end = tl.duration();
+  tl.to(art, { ...shot(), duration: 1 }, end);
+  tl.to(lens, { attr: { r: 0 }, duration: 0.6 }, end);
+  tl.to(shade, { opacity: 0, duration: 0.6 }, end + 0.3);
   tl.to({}, { duration: 0.5 });
 }
 

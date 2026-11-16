@@ -148,13 +148,14 @@ main > section { padding-inline: var(--m); }
 .plan-head p { max-width: 58ch; color: var(--muted); }
 .plan-view { margin-top: 56px; overflow: hidden; }
 .plan-art { transform-origin: 0 0; }
-.plan-art svg { display: block; inline-size: 100%; block-size: auto; }
-.plan-lines, .plan-dim { opacity: 0; }
+.plan-art svg { display: block; inline-size: 100%; block-size: auto; overflow: visible; }
+.plan-shade { fill: var(--bg); opacity: 0; }
+.loupe { fill: none; stroke: #e2b45a; stroke-width: 6; }
+.plan-edge { fill: var(--accent); opacity: 0; }
 .parts { list-style: none; margin: 56px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 40px 48px; }
 .parts h3, .plan-more h3 { font-size: var(--step-lead); letter-spacing: -0.02em; }
 .parts p { margin-top: 8px; }
 .parts .ctl { color: var(--muted); font-size: var(--step-small); }
-.leader { display: none; }
 .plan-more { margin-top: 96px; display: grid; gap: 24px; }
 .plan-more dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px 48px; }
 .plan-more dt { font-weight: 500; }
@@ -171,17 +172,11 @@ main > section { padding-inline: var(--m); }
   padding-block: 28px 40px;
 }
 .is-scene .plan-view { margin-top: 24px; position: relative; display: grid; align-items: center; }
-/* A dim room: the dock in low light, its drawing over it, and the part being named in full light. */
-.is-scene .plan-dim { opacity: 0.3; }
-.is-scene .plan-lines { opacity: 0.5; }
 .is-scene .parts { display: grid; grid-template-columns: minmax(0, 1fr); margin-top: 24px; min-block-size: 9.5em; }
 .is-scene .parts li { grid-area: 1 / 1; max-width: 46ch; opacity: 0; visibility: hidden; }
 .is-scene .parts li.is-on { visibility: visible; }
 .is-scene .parts h3 { font-size: var(--step-head); }
 .is-scene .plan-head, .is-scene .parts { position: relative; z-index: 1; }
-.is-scene .leader { display: block; position: absolute; inset: 0; z-index: 0; inline-size: 100%; block-size: 100%; pointer-events: none; overflow: visible; }
-.leader polyline { fill: none; stroke: var(--ink); stroke-width: 1.5; }
-.leader circle { fill: none; stroke: var(--ink); stroke-width: 2; }
 @media (width < 720px) {
   .is-scene .plan-head p { display: none; }
   .is-scene .parts { min-block-size: 12em; }

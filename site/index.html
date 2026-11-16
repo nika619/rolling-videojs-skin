@@ -63,15 +63,20 @@
             <div class="plan-art">
               <svg viewBox="0 0 3300 546" role="img" aria-label="The walnut dock of the player: rail with marble, ladder, chime bars, snake and bell above a bench of brass and wooden keys.">
                 <defs>
-                  <!-- taste-skill-ignore: a soft-edged spotlight in the mask, not a fill on the page -->
-                  <radialGradient id="spot"><stop offset="0.55" stop-color="#fff" /><stop offset="1" stop-color="#fff" stop-opacity="0" /></radialGradient>
+                  <!-- taste-skill-ignore: the loupe's feathered edge in the mask, not a fill on the page -->
+                  <radialGradient id="spot"><stop offset="0.9" stop-color="#fff" /><stop offset="1" stop-color="#fff" stop-opacity="0" /></radialGradient>
                   <mask id="lit" maskUnits="userSpaceOnUse" x="0" y="0" width="3300" height="546">
-                    <rect class="lit-all" width="3300" height="546" fill="#fff" />
+                    <circle class="spot" r="0" fill="url(#spot)" />
                   </mask>
+                  <clipPath id="reveal"><rect class="reveal" width="3300" height="546" /></clipPath>
                 </defs>
-                <image class="plan-dim" href="./img/dock-walnut.webp" width="3300" height="546" />
-                <image class="plan-lines" href="./img/plan.webp" width="3300" height="546" />
-                <image class="plan-wood" href="./img/dock-walnut.webp" width="3300" height="546" mask="url(#lit)" />
+                <g clip-path="url(#reveal)">
+                  <image class="plan-dock" href="./img/dock-walnut.webp" width="3300" height="546" />
+                  <rect class="plan-shade" width="3300" height="546" />
+                  <image class="plan-dock plan-lit" href="./img/dock-walnut.webp" width="3300" height="546" mask="url(#lit)" />
+                </g>
+                <circle class="loupe" r="0" />
+                <rect class="plan-edge" width="10" height="546" />
               </svg>
             </div>
           </div>
@@ -81,7 +86,7 @@
             <li data-x="24.8" data-y="80" data-r="150"><h3>Time</h3><p>A brass drum counter; press it for the time left. Minutes are burned into the beam like a ruler.</p><p class="ctl">Time display</p></li>
             <li data-x="19.8" data-y="24" data-r="110"><h3>Seek</h3><p>Drag the marble, flick it and it rolls on with momentum, or tap the rail and it rolls there.</p><p class="ctl">Time slider</p></li>
             <li data-x="38.9" data-y="58" data-r="110"><h3>Chapters</h3><p>A tuned chime bar hangs at each chapter and the marble rings it in passing. Flick across several and they play in order.</p><p class="ctl">Slider chapters, chapter menu</p></li>
-            <li data-x="60" data-y="55" data-r="260"><h3>The way home</h3><p>The snake under the beam. It watches the marble, rises as the film nears its end, and swallows it at the bell.</p><p class="ctl">Ended state</p></li>
+            <li data-x="60" data-y="55" data-r="170"><h3>The way home</h3><p>The snake under the beam. It watches the marble, rises as the film nears its end, and swallows it at the bell.</p><p class="ctl">Ended state</p></li>
             <li data-x="92.6" data-y="30" data-r="120"><h3>End</h3><p>The marble drops into a brass bell, and every chime shimmers in turn.</p><p class="ctl">Ended state</p></li>
             <li data-x="2.6" data-y="30" data-r="110"><h3>Replay</h3><p>The ladder, the way up. It lifts the marble back to the start.</p><p class="ctl">Play button, ended</p></li>
             <li data-x="56" data-y="80" data-r="110"><h3>Mute</h3><p>A cork in the brass horn. Pull it and the sound comes back with a pop.</p><p class="ctl">Mute button</p></li>
@@ -92,7 +97,6 @@
             <li data-x="90.4" data-y="80" data-r="120"><h3>Settings</h3><p>A felt-lined drawer slides down the slope; each setting is a peg in a hole.</p><p class="ctl">Settings menu</p></li>
             <li data-x="96.5" data-y="80" data-r="110"><h3>Full screen</h3><p>A pull cord with a wooden bead that swings after the tug.</p><p class="ctl">Fullscreen button</p></li>
           </ol>
-          <svg class="leader" aria-hidden="true"><polyline points="0,0 0,0 0,0" /><circle r="7" /></svg>
         </div>
         </div>
         <div class="plan-more">
