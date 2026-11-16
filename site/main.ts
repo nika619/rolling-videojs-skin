@@ -42,7 +42,16 @@ i18n.append(player);
 document.getElementById('player')!.append(i18n);
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-const video = (): HTMLVideoElement | null => player.querySelector('video');
+interface Store {
+  currentTime: number;
+  duration: number;
+  paused: boolean;
+  ended: boolean;
+  seek(time: number): Promise<number>;
+  subscribe(callback: () => void): () => void;
+}
+// The player's store is the truth: with Mux the <video> sits inside <mux-video>'s shadow root.
+const store = (): Store | undefined => (player as unknown as { store?: Store }).store;
 const key = (id: string): void => player.querySelector<HTMLElement>(`#${id}`)?.click();
 
 /** Bring the player into view before a page button works it, so the mechanism is seen. */
@@ -54,11 +63,11 @@ function bring(): void {
 /** Throw the marble along the rail the way a hand would: grab it, move fast, let go. */
 function flick(): void {
   const slider = player.querySelector<HTMLElement>('media-time-slider');
-  const v = video();
-  if (!slider || !v || !(v.duration > 0)) return;
+  const s = store();
+  if (!slider || !s || !(s.duration > 0)) return;
   const r = slider.getBoundingClientRect();
-  const from = r.left + (v.currentTime / v.duration) * r.width;
-  const dir = v.currentTime / v.duration > 0.6 ? -1 : 1;
+  const from = r.left + (s.currentTime / s.duration) * r.width;
+  const dir = s.currentTime / s.duration > 0.6 ? -1 : 1;
   const y = r.top + r.height / 2;
   const at = (x: number, type: string, target: EventTarget): boolean =>
     target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 1, pointerType: 'mouse', isPrimary: true, clientX: x, clientY: y, button: 0, buttons: type === 'pointerup' ? 0 : 1 }));
@@ -66,9 +75,9 @@ function flick(): void {
   let i = 0;
   const step = (): void => {
     i += 1;
-    at(from + dir * i * r.width * 0.022, 'pointermove', slider);
-    if (i < 8) requestAnimationFrame(step);
-    else at(from + dir * i * r.width * 0.022, 'pointerup', slider);
+    at(from + dir * i * r.width * 0.014, 'pointermove', slider);
+    if (i < 6) requestAnimationFrame(step);
+    else at(from + dir * i * r.width * 0.014, 'pointerup', slider);
   };
   requestAnimationFrame(step);
 }
@@ -81,11 +90,10 @@ const acts: Record<string, () => void> = {
   tape: () => key('rl-cc'),
   drawer: () => key('rl-settings'),
   bell: () => {
-    const v = video();
-    if (!v || !(v.duration > 0)) return;
-    if (v.ended) return key('rl-play');
-    v.currentTime = Math.max(0, v.duration - 3.5);
-    if (v.paused) key('rl-play');
+    const s = store();
+    if (!s || !(s.duration > 0)) return;
+    if (s.ended) return key('rl-play');
+    void s.seek(Math.max(0, s.duration - 3.5)).then(() => store()?.paused && key('rl-play'));
   },
 };
 
@@ -100,11 +108,14 @@ document.addEventListener('click', (event) => {
 
 // The bar's action says what it will do next.
 const action = document.querySelector<HTMLButtonElement>('.act[data-act="play"]')!;
+let said = '';
 const label = (): void => {
-  const v = video();
-  action.textContent = v && !v.paused && !v.ended ? 'Pause the film' : v?.ended ? 'Play it again' : 'Play the film';
+  const s = store();
+  const next = s && !s.paused && !s.ended ? 'Pause the film' : s?.ended ? 'Play it again' : 'Play the film';
+  if (next !== said) action.textContent = said = next;
 };
-for (const type of ['play', 'pause', 'ended']) player.addEventListener(type, label, true);
+// The store exists once the player has upgraded; it reports every change, so only a new label touches the page.
+customElements.whenDefined('video-player').then(() => requestAnimationFrame(() => store()?.subscribe(label)));
 
 // Scroll scenes: laid out now, so nothing jumps; animated once the machine has mounted, so they never compete with it.
 if (!reduced.matches) {
