@@ -61,8 +61,8 @@ export interface MachineStats {
   calls: number;
   /** Times every part was rebuilt: on a resize or a layout change, never while the film simply plays. */
   builds: number;
-  /** The last thing the machine reacted to, by impulse name. */
-  impulse: string;
+  /** How many times the machine has reacted to each impulse, by name. */
+  impulses: Record<string, number>;
 }
 
 export interface Machine {
@@ -140,7 +140,7 @@ export function mount(options: MountOptions): Machine {
   });
   pmrem.dispose();
 
-  const stats: MachineStats = { quality: options.quality, frames: 0, fps: 0, drawMs: 0, worstMs: 0, triangles: 0, calls: 0, builds: 0, impulse: '' };
+  const stats: MachineStats = { quality: options.quality, frames: 0, fps: 0, drawMs: 0, worstMs: 0, triangles: 0, calls: 0, builds: 0, impulses: {} };
   let quality: Quality = options.quality;
   let post: Post | null = null;
   let postLoading = false;
@@ -200,7 +200,7 @@ export function mount(options: MountOptions): Machine {
   const kick = (name: ImpulseName, strength = 1, at = performance.now(), x = state.marble.x): void => {
     if (!armed) return;
     impulses.set(name, { at: at / 1000, strength, x });
-    stats.impulse = name;
+    stats.impulses[name] = (stats.impulses[name] ?? 0) + 1;
     stirredAt = Math.max(stirredAt, at);
     drawWanted = true;
   };

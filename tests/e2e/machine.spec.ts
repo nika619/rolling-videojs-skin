@@ -9,6 +9,7 @@ interface Stats {
   fps: number;
   builds: number;
   triangles: number;
+  impulses: Record<string, number>;
 }
 
 // A fixed quality, so the machine never steps down on a slow software rasteriser in the middle of a test.
@@ -187,6 +188,72 @@ test.describe('the 3D machine', () => {
     await page.waitForTimeout(1000);
     expect((await stats(page))!.frames, 'no frames while the player is off screen').toBe(away);
     expect((await state(page)).paused, 'the film plays on while the machine rests').toBe(false);
+  });
+});
+
+test.describe('the machine is alive', () => {
+  /** Frames drawn over half a second. */
+  const drawing = async (page: Page): Promise<number> => {
+    const before = (await stats(page))!.frames;
+    await page.waitForTimeout(500);
+    return (await stats(page))!.frames - before;
+  };
+
+  test('nothing ripples on first load: the machine waits for a hand on the player', async ({ page }) => {
+    await open3d(page);
+    await expect.poll(() => drawing(page), { timeout: 30_000 }).toBe(0);
+    expect((await stats(page))!.impulses, 'no impulse before anyone touches the player').toEqual({});
+  });
+
+  test('a pause draws its ripple through the machine and then settles back to no frames at all', async ({ page }) => {
+    await open3d(page);
+    await controls(page).lever.click();
+    await expect.poll(async () => (await state(page)).paused).toBe(false);
+    await page.waitForTimeout(1000);
+
+    const before = (await stats(page))!.frames;
+    await controls(page).lever.click();
+    await expect.poll(async () => (await stats(page))!.impulses.pause ?? 0).toBe(1);
+    await page.waitForTimeout(300);
+    expect((await stats(page))!.frames, 'the pause is drawn').toBeGreaterThan(before);
+    // The knock dies away, the nearest chime rings out, and then nothing moves and nothing is drawn.
+    await expect.poll(() => drawing(page), { timeout: 30_000 }).toBe(0);
+    expect((await state(page)).paused).toBe(true);
+  });
+
+  test('every action reaches the machine as its own impulse', async ({ page }) => {
+    await open3d(page);
+    const count = async (name: string): Promise<number> => (await stats(page))!.impulses[name] ?? 0;
+    const actions: [string, () => Promise<void>, string[]][] = [
+      ['play', () => controls(page).lever.click(), ['lever', 'play']],
+      ['pause', () => controls(page).lever.click(), ['pause']],
+      ['skip', () => controls(page).forward.click(), ['fwd', 'seek']],
+      // The fixture opens muted, so every engine lets it play: the first pull of the cork brings the sound.
+      ['unmute', () => controls(page).horn.click(), ['horn', 'unmute']],
+      ['mute', () => controls(page).horn.click(), ['mute']],
+      ['speed', () => controls(page).jack.click(), ['jack', 'rate']],
+      ['captions', () => controls(page).tapeKey.click(), ['tapekey', 'captions']],
+      ['settings', () => controls(page).drawer.click(), ['drawer', 'open']],
+    ];
+    for (const [action, act, names] of actions) {
+      const before = await Promise.all(names.map(count));
+      await act();
+      for (const [index, name] of names.entries()) {
+        await expect.poll(() => count(name), { message: `${action} sends ${name}` }).toBeGreaterThan(before[index]!);
+      }
+    }
+    await page.keyboard.press('Escape');
+  });
+
+  test('with reduced motion an action changes state without a ripple, and the machine is still at once', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await open3d(page);
+    await expect.poll(() => drawing(page), { timeout: 30_000 }).toBe(0);
+    await controls(page).horn.click();
+    await expect.poll(async () => (await stats(page))!.impulses.unmute ?? 0).toBe(1);
+    // No cork leaping and bouncing, no fluttering slats, no flinch: the new state, then nothing.
+    await page.waitForTimeout(700);
+    expect(await drawing(page)).toBe(0);
   });
 });
 
