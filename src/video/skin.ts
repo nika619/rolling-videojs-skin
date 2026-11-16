@@ -69,6 +69,7 @@ import '../rail/rolling-rail';
 import '../machine/rolling-machine';
 import './rolling-tape';
 import './rolling-sound';
+import './rolling-label';
 import { registerIcons } from '@videojs/html/icons';
 import {
   airPlayEnterIcon as airPlayEnterIconScaffold,
