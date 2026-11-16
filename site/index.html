@@ -19,8 +19,7 @@
     <script>
       // Decided before the first paint, so the page never shows under the opening. Once a visit, never under reduced motion.
       try {
-        if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !location.hash && !sessionStorage.getItem('rolling-intro')) {
-          sessionStorage.setItem('rolling-intro', '1');
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !location.hash) {
           document.documentElement.classList.add('intro-on');
         }
       } catch {}
