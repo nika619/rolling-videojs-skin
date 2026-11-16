@@ -21,3 +21,6 @@ playwright-report/
 CLAUDE.md
 AGENTS.md
 .claude/
+tests/fixture/public/kilauea.mp4
+media/
+site/public/film/*.mp4
