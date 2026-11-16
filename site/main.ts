@@ -3,18 +3,24 @@ import '@/video/skin';
 import template from '@/video/skin.html?raw';
 import './site.css';
 
-/** Set once the film is on Mux: the page then streams it from Mux, which also serves the loupe's storyboard. */
-const MUX_PLAYBACK_ID = '';
+/** The film on Mux (public playback ID): the page streams it from Mux, whose element adds the loupe's storyboard by itself. */
+const MUX_PLAYBACK_ID = 'TS9zV00Yta00GC9UjUdQBdqIS3W00OOnVIrza3pY9uICPc';
 const FILM = './film/kilauea-2026';
+// Stream from Mux where the browser can play HLS (natively or through Media Source); elsewhere play the same film as a file.
+const probe = document.createElement('video');
+const hls =
+  !!probe.canPlayType('application/vnd.apple.mpegurl') ||
+  !!((window as { ManagedMediaSource?: typeof MediaSource }).ManagedMediaSource ?? window.MediaSource)?.isTypeSupported?.('video/mp4; codecs="avc1.640028,mp4a.40.2"');
+const STREAM = MUX_PLAYBACK_ID && hls;
 // Only a page that streams from Mux pays for Mux's player.
-if (MUX_PLAYBACK_ID) await import('@videojs/html/media/mux-video');
+if (STREAM) await import('@videojs/html/media/mux-video');
 
 const tracks = `<track kind="chapters" srclang="en" label="Episodes" src="${FILM}-chapters.vtt" default>
 <track kind="captions" srclang="en" label="English" src="${FILM}-captions.vtt">
 <track kind="subtitles" srclang="en" label="Field notes" src="${FILM}-notes.vtt">`;
 
-const media = MUX_PLAYBACK_ID
-  ? `<mux-video playback-id="${MUX_PLAYBACK_ID}" playsinline crossorigin preload="metadata">${tracks}</mux-video>`
+const media = STREAM
+  ? `<mux-video src="https://stream.mux.com/${MUX_PLAYBACK_ID}.m3u8" playsinline crossorigin preload="metadata" poster="${FILM}-poster.jpg">${tracks}</mux-video>`
   : `<video playsinline crossorigin preload="metadata" poster="${FILM}-poster.jpg"><source src="${FILM}.mp4" type="video/mp4">${tracks}
 <track kind="metadata" label="thumbnails" src="${FILM}-storyboard.vtt" default></video>`;
 
