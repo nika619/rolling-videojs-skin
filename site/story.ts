@@ -90,6 +90,7 @@ function snakes(): void {
   const section = document.querySelector<HTMLElement>('.snakes.is-scene');
   if (!section) return;
   const reel = section.querySelector<HTMLImageElement>('.reel')!;
+  reel.loading = 'eager';
   const urls = Array.from({ length: 62 }, (_, i) => `./img/snake/seq/${String(i).padStart(2, '0')}.webp`);
   // Fetched and decoded as the scene nears, so a scroll step only swaps a ready picture.
   const ready: HTMLImageElement[] = [];
