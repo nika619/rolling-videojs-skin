@@ -1942,6 +1942,8 @@
   /* ---------- Full screen: the dock lies over the foot of the picture and hides when the viewer is idle ---------- */
 
   .media-skin.rolling:fullscreen {
+    /* The theme scales a thin control bar up to 1.75x on big screens; the dock is already tall, so it keeps its size. */
+    --media-scale: 1;
     grid-template: "film" minmax(0, 1fr) / minmax(0, 1fr);
     border-radius: 0;
     background: #000;
