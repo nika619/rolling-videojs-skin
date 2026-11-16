@@ -126,6 +126,35 @@ test.describe('the 3D machine', () => {
     noErrors();
   });
 
+  test('full screen on a large screen keeps the 3D machine, and the dock keeps its size', async ({ page }) => {
+    test.slow();
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await open3d(page);
+    const dockHeight = () => page.locator('.rl-dock').evaluate((dock) => dock.getBoundingClientRect().height);
+    const inline = await dockHeight();
+
+    await controls(page).cord.click();
+    const granted = await page.waitForFunction(() => !!document.fullscreenElement, null, { timeout: 5_000 }).then(() => true, () => false);
+    test.skip(!granted, 'this engine does not grant full screen headless');
+    await page.waitForTimeout(800);
+    expect(await dockHeight()).toBeLessThan(Math.min(1080 * 0.25, inline * 1.2));
+
+    // Software WebGL makes every frame slow; working the rail used to drop the machine to flat for the rest of the visit.
+    const box = (await controls(page).rail.boundingBox())!;
+    for (let i = 0; i < 3; i++) {
+      await page.mouse.move(box.x + box.width * 0.2, box.y + box.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(box.x + box.width * 0.8, box.y + box.height / 2, { steps: 24 });
+      await page.mouse.up();
+    }
+    await expect(controls(page).player).toHaveAttribute('data-machine', '3d');
+
+    await page.evaluate(() => document.exitFullscreen());
+    await page.waitForFunction(() => !document.fullscreenElement);
+    await page.waitForTimeout(500);
+    await expect(controls(page).player).toHaveAttribute('data-machine', '3d');
+  });
+
   test('every tab stop keeps its two-tone ring over the 3D bench', async ({ page, browserName }) => {
     await open3d(page);
     const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
