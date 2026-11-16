@@ -32,9 +32,9 @@ function plan(): void {
     spot.setAttribute('cx', String(x));
     spot.setAttribute('cy', String(y));
     spot.setAttribute('r', '0');
-    spot.setAttribute('fill', '#fff');
+    spot.setAttribute('fill', 'url(#spot)');
     mask.append(spot);
-    return { li, x, y, r: Number(li.dataset.r), spot };
+    return { li, x, y, r: Number(li.dataset.r) * 1.35, spot };
   });
   section.style.setProperty('--steps', String(parts.length + 1));
   art.style.cssText = 'position:absolute;inset:0 auto auto 0;inline-size:100%';
