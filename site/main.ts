@@ -1,5 +1,4 @@
 import '@videojs/html/video/player';
-import '@videojs/html/media/mux-video';
 import '@/video/skin';
 import template from '@/video/skin.html?raw';
 import './site.css';
@@ -7,6 +6,8 @@ import './site.css';
 /** Set once the film is on Mux: the page then streams it from Mux, which also serves the loupe's storyboard. */
 const MUX_PLAYBACK_ID = '';
 const FILM = './film/kilauea-2026';
+// Only a page that streams from Mux pays for Mux's player.
+if (MUX_PLAYBACK_ID) await import('@videojs/html/media/mux-video');
 
 const tracks = `<track kind="chapters" srclang="en" label="Episodes" src="${FILM}-chapters.vtt" default>
 <track kind="captions" srclang="en" label="English" src="${FILM}-captions.vtt">
