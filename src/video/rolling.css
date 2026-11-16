@@ -1588,6 +1588,40 @@
       inset 0 0 0 1.5px rgb(255 255 255 / 0.15),
       0 0 0 1.5px var(--rl-outline),
       0 18px 40px rgb(0 0 0 / 0.6);
+    /* One column that never grows past the tray, whatever the browser's error text holds. */
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* On maple the tray is pale wood: dark ink, as on the plates. */
+  @supports (color: light-dark(red, red)) {
+    .rolling .rl-tray {
+      color: light-dark(var(--rl-ink), var(--rl-cream));
+    }
+  }
+
+  /* The browser's own error text is technical: it reads as a small stamped label under the plain title, and wraps. */
+  .rolling .rl-tray .media-dialog-description {
+    font: 400 calc(var(--u) * 2.9) / 1.45 var(--rl-mono);
+    color: color-mix(in oklab, currentColor 74%, transparent);
+    overflow-wrap: anywhere;
+  }
+
+  /* A small player keeps the tray inside the picture: tighter, with a smaller marble. */
+  @container rolling (width < 420px) {
+    .rolling .rl-tray {
+      padding: calc(var(--u) * 3);
+      gap: calc(var(--u) * 1.5);
+    }
+
+    .rolling .rl-tray .rl-tray-marble {
+      inline-size: calc(var(--u) * 5);
+      block-size: calc(var(--u) * 5);
+      margin-block-end: 0;
+    }
+
+    .rolling .rl-tray .media-dialog-title {
+      font-size: calc(var(--u) * 3.75);
+    }
   }
 
   .rl-tray-marble {
