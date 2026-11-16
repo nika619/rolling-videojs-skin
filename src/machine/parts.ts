@@ -553,7 +553,8 @@ export function buildMachine(build: Build): Updater[] {
 
     updaters.push((frame) => {
       const { marble, ended, paused, rock, tilt } = frame.state;
-      let busy = move(motion.tilt, tilt, 15, 0.55, frame);
+      // Speed: the rail tilts a little past its new slope and back.
+      let busy = move(motion.tilt, tilt, 15, 0.35, frame);
 
       rail.rotation.z = -worldTilt(motion.tilt.x);
       // Pause: the marble knocks on the pin and the beam shudders a pixel before it settles.
@@ -633,9 +634,12 @@ export function buildMachine(build: Build): Updater[] {
         // Skip: the flipper's kick throws the marble up off the rods, and it lands with a small bounce.
         const tSkip = Math.min(since(frame, 'back'), since(frame, 'fwd'));
         const hop = hump(tSkip, 0.26) * r * 0.6 + Math.abs(ring(tSkip - 0.26, 4.5, 9)) * r * 0.12;
-        busy ||= tSkip < 0.26 + ringSpan(9);
-        ball.position.set(railX + (bowlRest.x - 0) * ease(clamp(d * 1.5, 0, 1)), ride + motion.grab.x * 1.5 + hop + (bowlRest.y - ride) * ease(clamp(d * 1.5 - 0.3, 0, 1.2)), 0);
-        ball.rotation.z = -marble.turn + wobble;
+        // Speed: as the slope changes under it the marble rocks, rolling a little each way.
+        const tRate = since(frame, 'rate');
+        const rocking = ring(tRate, 1.7, 3.2) * r * 0.35 * (frame.impulses.get('rate')?.strength ?? 0);
+        busy ||= tSkip < 0.26 + ringSpan(9) || tRate < ringSpan(3.2);
+        ball.position.set(railX + rocking + (bowlRest.x - 0) * ease(clamp(d * 1.5, 0, 1)), ride + motion.grab.x * 1.5 + hop + (bowlRest.y - ride) * ease(clamp(d * 1.5 - 0.3, 0, 1.2)), 0);
+        ball.rotation.z = -marble.turn + wobble - rocking / r;
       }
 
       // Pause: a brass pin comes up just ahead of the marble. On play it drops back into the beam with a bounce.
@@ -932,7 +936,8 @@ export function buildMachine(build: Build): Updater[] {
     const teeth = new Shape();
     const rackHeight = hl * 0.74;
     const die = mesh(group, new RoundedBoxGeometry(size, size, size, 3, size * 0.16), mats.die);
-    const rolled = mem('die', () => ({ step: spring(2), spin: spring(1), from: new Quaternion(), to: new Quaternion(), face: -1 }));
+    const rolled = mem('die', () => ({ step: spring(2), spin: spring(1), from: new Quaternion(), to: new Quaternion(), face: -1, tooth: 2, toothAt: -9 }));
+    const baseX = group.position.x;
     const yaw = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), 0.2);
     const turns: readonly (readonly [number, number, number])[] = [
       [0, 0, 0],
@@ -971,9 +976,20 @@ export function buildMachine(build: Build): Updater[] {
       }
       const climbing = move(rolled.step, rate, 30, 0.6, frame);
       const tumbling = move(rolled.spin, 1, 17, 0.72, frame);
+      // The jack ratchets: every tooth the die passes clicks the plate in its bed.
+      const tooth = Math.round(rolled.step.x);
+      if (tooth !== rolled.tooth) {
+        rolled.tooth = tooth;
+        rolled.toothAt = frame.now;
+      }
+      const tTooth = frame.calm ? Number.POSITIVE_INFINITY : frame.now - rolled.toothAt;
+      group.position.x = baseX + ring(tTooth, 17, 16) * 0.9;
+      // And the die bounces as it lands on its new face.
+      const tLand = since(frame, 'rate') - 0.3;
+      const bounce = Math.abs(ring(tLand, 4.2, 7)) * size * 0.28;
       die.quaternion.slerpQuaternions(rolled.from, rolled.to, clamp(rolled.spin.x, 0, 1.12));
-      die.position.set(columnX, -travel / 2 + (rolled.step.x / 5) * travel, 2 + size / 2 + Math.sin(clamp(rolled.spin.x, 0, 1) * Math.PI) * size * 0.55);
-      return climbing || tumbling;
+      die.position.set(columnX, -travel / 2 + (rolled.step.x / 5) * travel, 2 + size / 2 + Math.sin(clamp(rolled.spin.x, 0, 1) * Math.PI) * size * 0.55 + bounce);
+      return climbing || tumbling || tTooth < ringSpan(16) || tLand < ringSpan(7);
     });
   }
 
