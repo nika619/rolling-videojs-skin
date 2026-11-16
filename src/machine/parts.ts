@@ -1182,5 +1182,30 @@ export function buildMachine(build: Build): Updater[] {
     });
   }
 
+  // Hover: besides rising to meet the mouse, the control under it catches the light: a glint runs across its brass.
+  const sheen = { name: null as ControlName | null, at: 0, from: new Vector3(), to: new Vector3(), reach: 0 };
+  updaters.push((frame) => {
+    const { hovered } = frame;
+    if (hovered !== sheen.name) {
+      sheen.name = hovered;
+      sheen.at = frame.now;
+      const box = hovered ? boxes[hovered] : null;
+      if (box) {
+        deck.updateWorldMatrix(true, false);
+        const point = (x: number, y: number): Vector3 => deck.localToWorld(face({ ...box, x, y }).setZ(KEY));
+        const middle = point(box.x, box.y);
+        sheen.from.copy(point(box.x - box.w / 2, box.y));
+        sheen.to.copy(point(box.x + box.w / 2, box.y));
+        // Measured across the picture plane, as the glint is: the deck leans, so its own distances run longer.
+        const edge = point(box.x, box.y - box.h / 2);
+        sheen.reach = Math.hypot(edge.x - middle.x, edge.y - middle.y) + 1;
+      }
+    }
+    const t = frame.now - sheen.at;
+    const on = !!sheen.name && !!boxes[sheen.name] && !frame.calm && t < 0.6;
+    mats.glint(1, sheen.from, sheen.to, -0.3 + (1.6 * t) / 0.55, on ? 1.6 * hump(t, 0.6) : 0, 0.12, sheen.reach);
+    return on;
+  });
+
   return updaters;
 }
