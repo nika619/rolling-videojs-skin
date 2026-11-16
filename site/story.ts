@@ -1,8 +1,9 @@
 // The page's scroll story, loaded after the player's machine has mounted and only when motion is allowed.
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { SplitText } from 'gsap/SplitText';
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, SplitText);
 
 const NS = 'http://www.w3.org/2000/svg';
 const ART = { w: 3300, h: 546 };
@@ -10,6 +11,11 @@ const ART = { w: 3300, h: 546 };
 export function start(): void {
   plan();
   snakes();
+  words();
+  pictures();
+  film();
+  counts();
+  rail();
   rise();
   ScrollTrigger.refresh();
 }
@@ -112,13 +118,81 @@ function snakes(): void {
   });
 }
 
-/** Each section's parts rise in turn as it arrives: heading, then text, then pictures. Only what starts below the fold. */
+/** Only what starts below the fold moves; what the visitor already sees stays put. */
+const below = (el: Element): boolean => el.getBoundingClientRect().top > innerHeight;
+
+/** Headings arrive line by line, each line rising out of its own mask. */
+function words(): void {
+  for (const el of document.querySelectorAll<HTMLElement>('.answers h2, .brief h2, .brief h3, .film-frame h2, .built h2, .last h2')) {
+    if (!below(el)) continue;
+    SplitText.create(el, {
+      type: 'lines',
+      mask: 'lines',
+      autoSplit: true,
+      onSplit: (self) =>
+        gsap.from(self.lines, { yPercent: 115, duration: 1, ease: 'expo.out', stagger: 0.09, scrollTrigger: { trigger: el, start: 'top 88%', once: true } }),
+    });
+  }
+}
+
+/** Pictures open left to right, the way the playhead crosses the rail, settling out of a slight push-in. */
+function pictures(): void {
+  for (const box of document.querySelectorAll<HTMLElement>('.response, .brief-fig')) {
+    if (!below(box)) continue;
+    const tl = gsap.timeline({
+      scrollTrigger: { trigger: box, start: 'top 82%', once: true },
+      onComplete: () => gsap.set(box, { clearProps: 'clipPath' }),
+    });
+    tl.fromTo(box, { clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.3, ease: 'expo.inOut' });
+    tl.from(box.querySelector('img'), { scale: 1.18, duration: 1.7, ease: 'expo.out' }, 0);
+  }
+}
+
+/** The film's frame opens like an iris as it rises: from a framed print to the whole screen. */
+function film(): void {
+  const frame = document.querySelector<HTMLElement>('.film-frame');
+  if (!frame || !below(frame)) return;
+  const tl = gsap.timeline({ scrollTrigger: { trigger: frame, start: 'top bottom', end: 'top 10%', scrub: 0.5 } });
+  tl.fromTo(frame, { clipPath: 'inset(14% 18% 14% 18% round 28px)' }, { clipPath: 'inset(0% 0% 0% 0% round 0px)', ease: 'none' });
+  tl.fromTo(frame.querySelector('img'), { scale: 1.3 }, { scale: 1, ease: 'none' }, 0);
+}
+
+/** Figures count up from nothing as they arrive; the text is only changed once it is on screen. */
+function counts(): void {
+  for (const el of document.querySelectorAll<HTMLElement>('.film-frame .figure, .film-facts dt')) {
+    const match = /^(\d+)(.*)$/s.exec(el.textContent ?? '');
+    if (!match || !below(el)) continue;
+    const [, to, rest] = match;
+    const n = { v: 0 };
+    ScrollTrigger.create({
+      trigger: el,
+      start: 'top 90%',
+      once: true,
+      onEnter: () => gsap.to(n, { v: Number(to), duration: 1.6, ease: 'power3.out', onUpdate: () => void (el.textContent = `${Math.round(n.v)}${rest}`) }),
+    });
+  }
+}
+
+/** The page has a playhead too: a steel marble rolls along a brass rail at the foot of the screen as you read. */
+function rail(): void {
+  const rail = document.querySelector<HTMLElement>('.page-rail');
+  const marble = rail?.querySelector<HTMLElement>('span');
+  if (!rail || !marble) return;
+  rail.hidden = false;
+  const run = (): number => rail.clientWidth - marble.offsetWidth;
+  gsap.to(marble, {
+    x: run,
+    rotation: () => (run() / (Math.PI * marble.offsetWidth)) * 360,
+    ease: 'none',
+    scrollTrigger: { start: 0, end: 'max', scrub: 0.4, invalidateOnRefresh: true },
+  });
+}
+
+/** Each section's parts rise in turn as it arrives: text, then pictures. Only what starts below the fold. */
 function rise(): void {
   const targets = [
-    ...document.querySelectorAll<HTMLElement>(
-      '.answers > h2, .answers-intro, .exchange > *, .sound p, .snakes-text p, .film-facts > div, .built li',
-    ),
-  ].filter((el) => el.getBoundingClientRect().top > innerHeight);
+    ...document.querySelectorAll<HTMLElement>('.answers-intro, .exchange > :not(figure), .sound p, .snakes-text p, .film-facts > div, .built li, .last p, .last pre'),
+  ].filter(below);
   gsap.set(targets, { autoAlpha: 0, y: 24 });
   ScrollTrigger.batch(targets, {
     start: 'top 88%',

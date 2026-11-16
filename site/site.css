@@ -257,6 +257,14 @@ main > section { padding-inline: var(--m); }
   .is-scene .snakes-text { grid-template-columns: 1fr 1fr; column-gap: 48px; max-width: 1100px; }
 }
 
+/* The page's own playhead: a steel marble on a brass rail at the foot of the screen (motion only). */
+.page-rail { position: fixed; inset: auto var(--m) 6px; block-size: 14px; z-index: 40; pointer-events: none; }
+.page-rail::before { content: ""; position: absolute; inset: auto 0 2px; block-size: 2px; background: #b88a3e; opacity: 0.7; }
+.page-rail span { position: absolute; left: 0; bottom: 0; inline-size: 14px; aspect-ratio: 1; border-radius: 50%; /* taste-skill-ignore: the steel marble's own shading */ background: radial-gradient(circle at 34% 30%, #fff 0 8%, #dfe3e6 18%, #8a9297 60%, #33383c); }
+.page-rail span::after { content: ""; position: absolute; inset: 46% 18%; border-radius: 2px; background: rgb(20 24 27 / 0.45); }
+.page-rail[hidden] { display: none; }
+.film-frame .figure, .film-facts dt { font-variant-numeric: tabular-nums; }
+
 /* The film: one frame, one figure on its edge. */
 .film { padding-block: var(--gap) 0; padding-inline: 0 !important; }
 .film-frame { position: relative; margin: 0; block-size: 88svh; min-block-size: 480px; overflow: hidden; }
