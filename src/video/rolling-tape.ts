@@ -69,6 +69,9 @@ export class RollingTapeElement extends HTMLElement {
     if (text) {
       void this.#line.offsetWidth;
       this.#line.classList.add('rl-print');
+      // The sound of the carriage follows the sweep's own length (none with reduced motion).
+      const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : Math.min(text.length * 22, 1100);
+      this.dispatchEvent(new CustomEvent('rolling-print', { bubbles: true, detail: { chars: text.length, ms } }));
     }
   };
 }

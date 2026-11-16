@@ -51,6 +51,7 @@ import '@videojs/html/ui/menu-separator';
 import '@videojs/html/ui/quality-radio-group';
 import '@videojs/html/ui/menu-radio-item';
 import '@videojs/html/ui/menu-item-indicator';
+import '@videojs/html/ui/menu-checkbox-item';
 import '@videojs/html/ui/audio-track-radio-group';
 import '@videojs/html/ui/playback-rate-radio-group';
 import '@videojs/html/ui/captions-radio-group';
@@ -67,6 +68,7 @@ import '@videojs/html/ui/seek-indicator-value';
 import '../rail/rolling-rail';
 import '../machine/rolling-machine';
 import './rolling-tape';
+import './rolling-sound';
 import { registerIcons } from '@videojs/html/icons';
 import {
   airPlayEnterIcon as airPlayEnterIconScaffold,
