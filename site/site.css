@@ -126,6 +126,8 @@ figcaption { margin-top: 10px; color: var(--muted); font-size: 14px; font-style:
 .brief h3 { grid-row: span 2; margin: 0; font-size: 26px; font-weight: 400; line-height: 1.2; }
 .brief h3 span { display: block; margin-top: 8px; font: 600 12px/1.4 var(--mono); letter-spacing: 0.12em; color: var(--brass); }
 .brief h3 span::after { content: " points"; }
+.brief .gate h3 span::after { content: none; }
+.brief b { color: var(--ink); font-weight: 600; }
 .brief blockquote { margin: 0; font-style: italic; color: var(--ink); }
 .brief ul { margin: 0; padding-left: 1.1em; color: var(--muted); }
 .brief li + li { margin-top: 8px; }

@@ -93,7 +93,18 @@
 
       <section class="brief" id="brief" aria-labelledby="brief-title">
         <h2 id="brief-title">Against the brief</h2>
-        <p class="intro">The challenge scores four things. Here is each, in the brief's own words, and what Rolling does about it, with the evidence.</p>
+        <p class="intro">The challenge checks four requirements, then scores four things. Here is each, in the brief's own words, and what Rolling does about it, with the evidence.</p>
+
+        <article class="gate">
+          <h3>The minimum requirements <span>Checked before scoring</span></h3>
+          <blockquote>“Each entry is reviewed against these requirements before it's scored.”</blockquote>
+          <ul>
+            <li><b>Works.</b> This page is a Video.js 10.4 player (<code>&lt;video-player&gt;</code> from <code>@videojs/html</code>) playing the film above, with no login and nothing to install.</li>
+            <li><b>Essential controls.</b> Play and pause: the lever. Seek bar: the rail. Time: the drum counter and the duration plate. Volume and mute: the swell shutters and the cork. Full screen: the pull cord. All present and tested from a 1100 px player down to a 200 px one; below 200 px the lever and the horn stay.</li>
+            <li><b>Responsive.</b> Six tiers set by the player's own width, not the window's, each tested in three engines for every control inside the dock and none overlapping, plus a phone profile with touch.</li>
+            <li><b>Keyboard.</b> Tab reaches every control in the order you see them, each with a visible ring; Enter and Space work them; the arrows, Page Up, Page Down, Home and End move the marble; Escape closes the drawer and puts focus back on its key.</li>
+          </ul>
+        </article>
 
         <article>
           <h3>Visual design and originality <span>10</span></h3>
@@ -119,7 +130,8 @@
           <h3>Accessibility <span>5</span></h3>
           <blockquote>“Controls stay readable over any video, keyboard focus is visible, touch targets are comfortable, and motion calms down when reduced motion is on.”</blockquote>
           <ul>
-            <li>Inline, no control sits on the picture: the dock is solid wood under it, so contrast never depends on the footage (the problem behind <a href="https://github.com/videojs/video.js/pull/9675">#9675</a>).</li>
+            <li>Inline, no control sits on the picture: the dock is solid wood under it, so contrast never depends on the footage (the problem behind <a href="https://github.com/videojs/video.js/pull/9675">#9675</a>). A scrim can only promise contrast for the frames it was tuned on; this holds for every frame of every film.</li>
+            <li>Contrast, measured: from the skin's own colours, every text pairing is 7.1:1 to 16:1, above the 7:1 of WCAG's strictest level (AAA). From the rendered 3D dock's pixels, each icon against what it is drawn on: 6.3:1 (the settings gear) to 11:1, where WCAG asks 3:1 for icons; the counter's and the speed plate's numerals 10.7:1 and 9.6:1.</li>
             <li>A two-tone focus ring that shows on walnut, maple and light video alike (<a href="https://github.com/videojs/video.js/issues/9705">#9705</a>). Keyboard order matches visual order; Escape leaves the drawer and returns focus to its key; Video.js hotkeys, gestures and the status announcer are kept.</li>
             <li>Captions print on a paper tape in a lip under the picture, so they never cover the film and never collide with the controls (<a href="https://github.com/videojs/video.js/issues/9420">#9420</a>, <a href="https://github.com/videojs/video.js/issues/9303">#9303</a>). In full screen, when the controls hide, the tape stays.</li>
             <li>Reduced motion: the marble slides without momentum or spin, mechanisms change state without travel, nothing ripples, and captions appear without the printing sweep. Forced colours and no WebGL: the flat skin, complete on its own, takes over.</li>
@@ -131,9 +143,9 @@
           <h3>Execution and polish <span>5</span></h3>
           <blockquote>“A complete, functional skin with consistent styling across controls, menus, and player states.”</blockquote>
           <ul>
-            <li>159 browser tests pass in Chromium, Firefox, WebKit and a phone profile: every control, keyboard-only use, every tier, both editions, reduced motion, the error tray, the end and replay, the 3D machine and its reactions. 51 unit tests cover the physics, the layout maths and the clock.</li>
-            <li>The 3D machine is a lazy chunk (168 kB gzipped) that loads only when the player is on screen, WebGL 2 is there and reduced data is off. If the GPU context is lost, it falls back to the flat skin without losing the player's state.</li>
-            <li>Frame budget, measured on a laptop RTX 4050: 61 fps while dragging, 30 fps during playback, and zero frames when paused and settled or scrolled off screen.</li>
+            <li>175 browser tests pass in Chromium, Firefox, WebKit and a phone profile: every control, keyboard-only use, every tier, both editions, reduced motion, the caption tape, the error tray, the end and replay, the 3D machine and its reactions, and a timed flick in each engine. Two sound tests are skipped in WebKit, because Playwright's WebKit on Windows has no Web Audio; there the machine is silent and nothing errors. 51 unit tests cover the physics, the layout maths and the clock.</li>
+            <li>The 3D machine is a lazy chunk (168 kB gzipped) that loads only when the player is on screen, WebGL 2 is there and reduced data is off. If the GPU context is lost mid-play, it hands back to the flat skin with the film still playing where it was; a test kills the context to prove it.</li>
+            <li>Frame budget: 61 fps while dragging, 30 fps during playback (capped on purpose; the film itself is 30), and zero frames when paused and settled or scrolled off screen. Measured from the gaps between animation frames in Chromium on a laptop RTX 4050, 1100 px player at 2× pixel density. Not measured: phones and Safari.</li>
           </ul>
         </article>
       </section>
