@@ -1764,7 +1764,7 @@
     }
   }
 
-  /* S: rail; lever, counter, horn, cord. */
+  /* S: rail; lever, counter, horn, tape key, cord. The tape key stays on a phone: captions are not a secondary control. */
   @container rolling (width < 420px) {
     .rl-dock {
       --rl-pad: calc(var(--u) * 2);
@@ -1773,7 +1773,6 @@
       --rl-over: calc(var(--u) * 2.5);
     }
 
-    .rl-tapekey,
     .rl-drawer,
     .rl-duration {
       display: none;
@@ -1802,6 +1801,7 @@
       --rl-y: calc(50% + var(--u) * 1.5);
     }
 
+    .rl-tapekey,
     .rl-counter,
     .rl-ruler,
     .rl-chapters,
