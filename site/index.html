@@ -87,6 +87,7 @@
           <figure><img src="./img/locket.webp" width="2292" height="790" loading="lazy" alt="Eight frames: the locket opens on the live film inside it, then leaves its seat." /><figcaption>Picture-in-picture: the locket opens on the live film, then leaves.</figcaption></figure>
           <figure><img src="./img/cork.webp" width="2892" height="730" loading="lazy" alt="Eight frames: the cork leaps out of the horn and bounces on its bail." /><figcaption>Unmute: the cork pops and bounces on its bail.</figcaption></figure>
         </div>
+        <p class="intro">It sounds like itself, too. Every voice is synthesized in the browser from a few oscillators and a little noise, with no audio files: the lever's clack and the pin dropping, a chime tuned to each chapter (a pentatonic scale, so a flick across several is always in tune), the bell at the end, the snake's gulp and the ladder's rungs, the cork's pop, the ratchet's teeth, the carriage ticking as captions print. Nothing sounds before your first touch or while the film is muted. It follows the film's volume and stays under it, and the drawer has a switch.</p>
         <p class="note">Nothing ripples before your first touch, nothing ripples with reduced motion on, and once the machine settles it draws no frames at all.</p>
       </section>
 
@@ -141,7 +142,7 @@
         <h2 id="honest-title">What is real, and what is drawn</h2>
         <ul>
           <li><b>Real:</b> every control is a Video.js 10 element with its own name, keyboard handling and focus ring. The player's store drives everything.</li>
-          <li><b>Drawn:</b> the machine is a three.js scene laid over those controls. It reads their positions and states from the page; it never talks to the player.</li>
+          <li><b>Drawn:</b> the machine is a three.js scene laid over those controls. It reads their positions and states from the page; it never talks to the player. Its sounds are synthesized the same way, from the film's own events.</li>
           <li><b>Not yet tested:</b> real iPhones and Android phones, and Safari itself. Playwright's WebKit stands in for Safari.</li>
         </ul>
       </section>
