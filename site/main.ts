@@ -120,7 +120,6 @@ customElements.whenDefined('video-player').then(() => requestAnimationFrame(() =
 // Scroll scenes: laid out now, so nothing jumps; animated once the machine has mounted, so they never compete with it.
 if (!reduced.matches) {
   for (const section of document.querySelectorAll<HTMLElement>('.plan, .snakes')) section.classList.add('is-scene');
-  document.querySelector('.snakes .frames li')?.classList.add('is-on');
   let started = false;
   const go = (): void => {
     if (started) return;

@@ -79,22 +79,35 @@ function plan(): void {
   tl.to({}, { duration: 0.5 });
 }
 
-/** Snakes and ladders: the replay, one frame per stretch of scroll. */
+/** Snakes and ladders: the replay, filmed one 60 fps tick at a time, played by the scroll. */
 function snakes(): void {
   const section = document.querySelector<HTMLElement>('.snakes.is-scene');
   if (!section) return;
-  const frames = [...section.querySelectorAll<HTMLLIElement>('.frames li')];
+  const reel = section.querySelector<HTMLImageElement>('.reel')!;
+  const urls = Array.from({ length: 62 }, (_, i) => `./img/snake/seq/${String(i).padStart(2, '0')}.webp`);
+  // Fetched and decoded as the scene nears, so a scroll step only swaps a ready picture.
+  const ready: HTMLImageElement[] = [];
+  ScrollTrigger.create({
+    trigger: section,
+    start: 'top 300%',
+    once: true,
+    onEnter: () => {
+      for (const url of urls) {
+        const image = new Image();
+        image.src = url;
+        image.decode().catch(() => {});
+        ready.push(image);
+      }
+    },
+  });
   let shown = 0;
   ScrollTrigger.create({
     trigger: section,
     start: 'top top',
     end: 'bottom bottom',
     onUpdate: ({ progress }) => {
-      const i = Math.min(frames.length - 1, Math.floor(progress * frames.length));
-      if (i === shown) return;
-      frames[shown]!.classList.remove('is-on');
-      frames[i]!.classList.add('is-on');
-      shown = i;
+      const i = Math.min(urls.length - 1, Math.floor(progress * urls.length));
+      if (i !== shown) reel.src = urls[(shown = i)]!;
     },
   });
 }
