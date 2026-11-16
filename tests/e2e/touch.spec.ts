@@ -40,7 +40,7 @@ test('every control on the dock is big enough for a thumb', async ({ page }) => 
       })
   );
 
-  expect(sizes.map((size) => size.name)).toEqual(['rl-slider', 'rl-play', 'rl-counter', 'rl-mute', 'rl-fs']);
+  expect(sizes.map((size) => size.name)).toEqual(['rl-slider', 'rl-play', 'rl-counter', 'rl-mute', 'rl-cc', 'rl-fs']);
   for (const size of sizes) {
     expect(size.width, `${size.name} width`).toBeGreaterThanOrEqual(44);
     expect(size.height, `${size.name} height`).toBeGreaterThanOrEqual(44);

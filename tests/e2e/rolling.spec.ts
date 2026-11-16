@@ -360,7 +360,7 @@ const TIERS = [
   { width: 800, tier: 'l', shown: ['rail', 'lever', 'back', 'forward', 'counter', 'horn', 'shutters', 'jack', 'tapeKey', 'locket', 'drawer', 'cord'] },
   { width: 640, tier: 'l', shown: ['rail', 'lever', 'back', 'forward', 'counter', 'horn', 'shutters', 'jack', 'tapeKey', 'locket', 'drawer', 'cord'] },
   { width: 520, tier: 'm', shown: ['rail', 'lever', 'counter', 'horn', 'tapeKey', 'drawer', 'cord'] },
-  { width: 360, tier: 's', shown: ['rail', 'lever', 'counter', 'horn', 'cord'] },
+  { width: 360, tier: 's', shown: ['rail', 'lever', 'counter', 'horn', 'tapeKey', 'cord'] },
   { width: 240, tier: 'xs', shown: ['rail', 'lever', 'horn', 'cord'] },
   { width: 180, tier: 'xxs', shown: ['lever', 'horn'] },
 ] as const;
