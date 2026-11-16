@@ -54,13 +54,14 @@ export const FRAME_WINDOW = 40;
 
 /**
  * Drop one tier when most of a window of free-running frames ran slow. Never climbs back:
- * a machine that was slow once would only flicker between tiers.
+ * a machine that was slow once would only flicker between tiers. Never drops below standard:
+ * slow frames (a full-screen resize, a busy moment) must not take the snake and the 3D away for good.
  */
 export function nextQuality(quality: Quality, frameMs: readonly number[]): Quality {
   if (quality === 'flat' || frameMs.length < FRAME_WINDOW) return quality;
   const slow = frameMs.filter((ms) => ms > SLOW_FRAME_MS).length;
   if (slow <= frameMs.length * 0.6) return quality;
-  return quality === 'high' ? 'standard' : 'flat';
+  return 'standard';
 }
 
 export type Activity = 'interacting' | 'playing' | 'settled';

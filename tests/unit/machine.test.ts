@@ -52,7 +52,7 @@ describe('when the 3D machine runs', () => {
     expect(nextQuality('high', fast)).toBe('high');
     expect(nextQuality('high', mixed)).toBe('high');
     expect(nextQuality('high', slow)).toBe('standard');
-    expect(nextQuality('standard', slow)).toBe('flat');
+    expect(nextQuality('standard', slow)).toBe('standard');
     expect(nextQuality('flat', fast)).toBe('flat');
     expect(nextQuality('high', slow.slice(0, 10))).toBe('high');
   });
