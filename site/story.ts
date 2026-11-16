@@ -124,7 +124,7 @@ function snakes(): void {
 function rise(): void {
   const targets = [
     ...document.querySelectorAll<HTMLElement>(
-      '.answers > h2, .answers-intro, .exchange > *, .sound p, .snakes-text p, .film-facts > div, .brief > h2, .brief-intro, .brief article, .built li, .last > div, .plan-more',
+      '.answers > h2, .answers-intro, .exchange > *, .sound p, .snakes-text p, .film-facts > div, .built li',
     ),
   ].filter((el) => el.getBoundingClientRect().top > innerHeight);
   gsap.set(targets, { autoAlpha: 0, y: 24 });
