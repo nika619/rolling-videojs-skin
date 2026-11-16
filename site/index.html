@@ -17,7 +17,8 @@
     <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
     <link href="https://api.fontshare.com/v2/css?f[]=switzer@400,500&display=swap" rel="stylesheet" />
     <script>
-      // Decided before the first paint, so the page never shows under the opening. Once a visit, never under reduced motion.
+      // Decided before the first paint, so the page never shows under the opening. Every load, never under reduced motion
+      // or on a link to a section.
       try {
         if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !location.hash) {
           document.documentElement.classList.add('intro-on');
@@ -35,7 +36,7 @@
       <p class="intro-line">A marble machine under the film</p>
     </div>
     <script>
-      // The opening: Kīlauea's lava inside the name while the machine builds; then the room folds into the page's own title.
+      // The opening: Kīlauea's lava inside the name while the machine builds; then the room lifts away onto the page.
       (() => {
         const root = document.documentElement;
         if (!root.classList.contains('intro-on')) return;
@@ -43,23 +44,11 @@
         const lava = intro.querySelector('video');
         lava.preload = 'auto';
         lava.play().catch(() => {});
-        // The room folds into the page's title once the machine is built, so it opens on the finished player.
-        const fold = () => {
-          const word = intro.querySelector('.intro-type');
-          const title = document.querySelector('.hero h1');
-          const a = word.getBoundingClientRect();
-          const b = title.getBoundingClientRect();
-          if (b.bottom > 0 && b.top < innerHeight) {
-            const s = parseFloat(getComputedStyle(title).fontSize) / parseFloat(getComputedStyle(word).fontSize);
-            const right = b.left + a.width * s;
-            const below = parseFloat(getComputedStyle(title).fontSize) * 0.18; // room for the g's tail
-            intro.style.setProperty('--s', String(s));
-            intro.style.setProperty('--dx', `${b.left - a.left}px`);
-            intro.style.setProperty('--dy', `${b.top - a.top}px`);
-            intro.style.setProperty('--clip', `inset(${b.top - 12}px ${innerWidth - right - 28}px ${innerHeight - b.bottom - below}px ${b.left - 12}px round 10px)`);
-          }
-          root.classList.add('intro-fold');
-          setTimeout(() => { root.classList.remove('intro-on', 'intro-go', 'intro-fold'); lava.pause(); lava.removeAttribute('src'); }, 2000);
+        // Once the machine is built: the letters sink back through their mask, the room lifts on a brass edge,
+        // and the page rises out of its own masks (site.css, "The way out").
+        const out = () => {
+          root.classList.add('intro-out');
+          setTimeout(() => { root.classList.remove('intro-on', 'intro-go', 'intro-out'); lava.pause(); lava.removeAttribute('src'); }, 2400);
         };
         const go = () => {
           root.classList.add('intro-go');
@@ -68,7 +57,7 @@
             const t = performance.now() - t0;
             if ((t > 1900 && document.querySelector('[data-machine="3d"]')) || t > 4000) {
               clearInterval(wait);
-              fold();
+              out();
             }
           }, 100);
         };
