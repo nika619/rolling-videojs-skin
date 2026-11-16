@@ -138,3 +138,18 @@ if (!reduced.matches) {
   // Someone who scrolls before the machine mounts should not find a still scene.
   addEventListener('scroll', () => scrollY > innerHeight * 0.5 && go(), { passive: true });
 }
+
+// On a phone the picture strips scroll sideways; a strip that scrolls must also be reachable from the keyboard.
+const strips = [...document.querySelectorAll<HTMLElement>('.response')];
+const reach = (): void => {
+  for (const strip of strips) {
+    if (strip.scrollWidth > strip.clientWidth + 1) {
+      strip.tabIndex = 0;
+      strip.setAttribute('aria-label', strip.querySelector('figcaption')?.textContent ?? 'Frames');
+    } else {
+      strip.removeAttribute('tabindex');
+      strip.removeAttribute('aria-label');
+    }
+  }
+};
+new ResizeObserver(reach).observe(document.documentElement);

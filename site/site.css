@@ -300,7 +300,7 @@ main > section { padding-inline: var(--m); }
 .last h2 { font-size: var(--step-lead) !important; letter-spacing: -0.02em; }
 .last ul { margin: 20px 0 0; padding-left: 1.1em; display: grid; gap: 10px; }
 .last p { margin-top: 20px; }
-.last pre { margin: 20px 0 0; overflow-x: auto; padding: 16px 20px; background: var(--surface); }
+.last pre { margin: 20px 0 0; padding: 16px 20px; background: var(--surface); white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (width < 900px) { .last { grid-template-columns: minmax(0, 1fr); } }
 
 footer { padding: 160px var(--m) 24px; font-size: var(--step-small); color: var(--muted); }
