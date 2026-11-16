@@ -1117,7 +1117,7 @@ export function buildMachine(build: Build): Updater[] {
 
     mesh(drawer, plate(w, hl, KEY + 1, u * 0.75, 1.3), mats.wood('drawer', 0.4));
     mesh(drawer, bezel(w - u * 3, hl - u * 3, 0.7, 0.6, u * 0.5), mats.dark, 0, 0, KEY + 0.7, false);
-    mesh(
+    const handle = mesh(
       drawer,
       turned([
         [knob * 0.5, 0],
@@ -1133,9 +1133,12 @@ export function buildMachine(build: Build): Updater[] {
       KEY + 1
     );
     updaters.push((frame) => {
-      const busy = move(pull, frame.state.drawer ? 1 : frame.pressed === 'drawer' ? -0.4 : 0, 28, 0.55, frame);
+      // The drawer runs out a little past its stop and back, and its knob nods with the jolt.
+      const busy = move(pull, frame.state.drawer ? 1 : frame.pressed === 'drawer' ? -0.4 : 0, 28, 0.38, frame);
       drawer.position.z = pull.x * 12;
-      return busy;
+      const tOpen = since(frame, 'open') - 0.08;
+      handle.rotation.x = ring(tOpen, 5.5, 5) * 0.22;
+      return busy || tOpen < ringSpan(5);
     });
   }
 
