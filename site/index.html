@@ -33,9 +33,10 @@
         <p class="intro-type"><span style="--i: 0">R</span><span style="--i: 1">o</span><span style="--i: 2">l</span><span style="--i: 3">l</span><span style="--i: 4">i</span><span style="--i: 5">n</span><span style="--i: 6">g</span></p>
       </div>
       <span class="intro-marble"></span>
+      <p class="intro-line">A marble machine under the film</p>
     </div>
     <script>
-      // The opening: Kīlauea's lava inside the name; then the room folds into the page's own title.
+      // The opening: Kīlauea's lava inside the name while the machine builds; then the room folds into the page's own title.
       (() => {
         const root = document.documentElement;
         if (!root.classList.contains('intro-on')) return;
@@ -43,7 +44,8 @@
         const lava = intro.querySelector('video');
         lava.preload = 'auto';
         lava.play().catch(() => {});
-        const go = () => {
+        // The room folds into the page's title once the machine is built, so it opens on the finished player.
+        const fold = () => {
           const word = intro.querySelector('.intro-type');
           const title = document.querySelector('.hero h1');
           const a = word.getBoundingClientRect();
@@ -51,14 +53,25 @@
           if (b.bottom > 0 && b.top < innerHeight) {
             const s = parseFloat(getComputedStyle(title).fontSize) / parseFloat(getComputedStyle(word).fontSize);
             const right = b.left + a.width * s;
+            const below = parseFloat(getComputedStyle(title).fontSize) * 0.18; // room for the g's tail
             intro.style.setProperty('--s', String(s));
             intro.style.setProperty('--dx', `${b.left - a.left}px`);
             intro.style.setProperty('--dy', `${b.top - a.top}px`);
-            const below = parseFloat(getComputedStyle(title).fontSize) * 0.18; // room for the g's tail
             intro.style.setProperty('--clip', `inset(${b.top - 12}px ${innerWidth - right - 28}px ${innerHeight - b.bottom - below}px ${b.left - 12}px round 10px)`);
           }
+          root.classList.add('intro-fold');
+          setTimeout(() => { root.classList.remove('intro-on', 'intro-go', 'intro-fold'); lava.pause(); lava.removeAttribute('src'); }, 2000);
+        };
+        const go = () => {
           root.classList.add('intro-go');
-          setTimeout(() => { root.classList.remove('intro-on', 'intro-go'); lava.pause(); lava.removeAttribute('src'); }, 3600);
+          const t0 = performance.now();
+          const wait = setInterval(() => {
+            const t = performance.now() - t0;
+            if ((t > 1900 && document.querySelector('[data-machine="3d"]')) || t > 4000) {
+              clearInterval(wait);
+              fold();
+            }
+          }, 100);
         };
         const ready = () => Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 700))]).then(() => requestAnimationFrame(go));
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);
