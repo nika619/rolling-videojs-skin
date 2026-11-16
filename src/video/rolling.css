@@ -292,6 +292,141 @@
       0 1px 0 rgb(255 255 255 / 0.2);
   }
 
+  /*
+   * Captions on: the lip opens and the tape carries the words on cream paper, under the picture and never under the
+   * controls. The browser's own cue box steps aside. New words print left to right under a brass carriage.
+   */
+  .media-skin.rolling video::cue {
+    color: transparent;
+    background: transparent;
+    text-shadow: none;
+    opacity: 0;
+  }
+
+  .rl-dock:has(.rl-tape[data-showing]) {
+    --rl-lip-h: clamp(calc(var(--u) * 10), 6.4cqi, calc(var(--u) * 17));
+  }
+
+  .rolling .rl-tape[data-showing] {
+    display: flex;
+    align-self: stretch;
+    block-size: auto;
+    margin-block: calc(var(--u) * 1.25);
+    background: var(--rl-dark);
+    border-radius: 3px;
+  }
+
+  .rl-tape-paper {
+    display: none;
+  }
+
+  .rl-tape[data-showing] > .rl-tape-paper {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: 1;
+    margin: 2px;
+    padding-inline: calc(var(--u) * 4);
+    overflow: hidden;
+    border-radius: 2px;
+    color: #24160b;
+    background:
+      radial-gradient(circle, rgb(60 38 16 / 0.24) 0 1px, transparent 1.6px) 0 1px / calc(var(--u) * 3) 6px repeat-x,
+      radial-gradient(circle, rgb(60 38 16 / 0.24) 0 1px, transparent 1.6px) 0 calc(100% - 1px) / calc(var(--u) * 3) 6px repeat-x,
+      linear-gradient(#fbf3df, #efe2c2);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.7),
+      inset 0 -2px 3px rgb(90 60 20 / 0.18);
+  }
+
+  /* The printed line, as wide as its words: the ink and the carriage both run across this box. */
+  .rl-tape-line {
+    --rl-print: calc(min(var(--rl-print-chars, 1) * 22ms, 1100ms));
+    position: relative;
+    max-inline-size: 100%;
+  }
+
+  .rl-tape-ink {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    font: 500 clamp(13px, 1.9cqi, 20px) / 1.25 var(--rl-serif);
+    text-align: center;
+    white-space: pre-line;
+  }
+
+  /* The carriage: a brass bar that runs ahead of the ink while a line prints. */
+  .rl-tape-line::after {
+    content: "";
+    position: absolute;
+    inset-block: -2px;
+    inset-inline-start: 0;
+    inline-size: 3px;
+    border-radius: 1px;
+    background: var(--rl-brass-face);
+    box-shadow: 0 0 0 1px rgb(60 38 16 / 0.35);
+    opacity: 0;
+  }
+
+  .rl-print > .rl-tape-ink {
+    animation: rl-print var(--rl-print) steps(var(--rl-print-chars, 1), end) both;
+  }
+
+  .rl-print::after {
+    animation: rl-carriage var(--rl-print) steps(var(--rl-print-chars, 1), end) both;
+  }
+
+  @keyframes rl-print {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0);
+    }
+  }
+
+  @keyframes rl-carriage {
+    from {
+      inset-inline-start: 0;
+      opacity: 1;
+    }
+    96% {
+      opacity: 1;
+    }
+    to {
+      inset-inline-start: 100%;
+      opacity: 0;
+    }
+  }
+
+  .rolling:dir(rtl) .rl-print > .rl-tape-ink {
+    animation-name: rl-print-rtl;
+  }
+
+  @keyframes rl-print-rtl {
+    from {
+      clip-path: inset(0 0 0 100%);
+    }
+    to {
+      clip-path: inset(0);
+    }
+  }
+
+  /* In full screen the dock hides when the viewer is idle; the words stay, on their paper, just above the edge. */
+  .media-skin.rolling:fullscreen > .rl-dock:not([data-visible]):not(:has(:focus-visible)) .rl-tape[data-text] > .rl-tape-paper {
+    visibility: visible;
+    translate: 0 calc(-100% - var(--u) * 4);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rl-print > .rl-tape-ink,
+    .rl-print::after {
+      animation: none;
+    }
+  }
+
   /* Rail tier */
 
   .rl-rail {

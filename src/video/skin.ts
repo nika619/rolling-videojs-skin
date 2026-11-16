@@ -66,6 +66,7 @@ import '@videojs/html/ui/seek-indicator';
 import '@videojs/html/ui/seek-indicator-value';
 import '../rail/rolling-rail';
 import '../machine/rolling-machine';
+import './rolling-tape';
 import { registerIcons } from '@videojs/html/icons';
 import {
   airPlayEnterIcon as airPlayEnterIconScaffold,
