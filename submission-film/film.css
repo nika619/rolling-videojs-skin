@@ -66,7 +66,7 @@ html, body { margin: 0; background: var(--ground); }
 #alive-band { left: 0; top: 420px; width: 1920px; height: 500px; border-radius: 0; }
 #alive-notes .note { position: absolute; left: 110px; top: 960px; margin: 0; font: 400 32px/1.2 Switzer; color: var(--muted); }
 #alive-notes .note b { font-weight: 500; color: var(--accent); margin-right: 16px; }
-#ripples circle { fill: none; stroke: var(--accent); }
+#ripples circle { fill: none; stroke: var(--accent); filter: drop-shadow(0 0 8px rgb(255 106 44 / 0.85)); }
 
 /* Controls */
 #ctl-band { position: absolute; left: 110px; top: 480px; width: 1700px; overflow: hidden; border-radius: 16px; box-shadow: 0 0 0 1.5px var(--line), 0 30px 80px rgb(0 0 0 / 0.65); }
