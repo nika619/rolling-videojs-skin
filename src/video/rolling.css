@@ -827,6 +827,7 @@
   .rl-icon {
     display: none;
     grid-area: 1 / 1;
+    opacity: 0;
     inline-size: var(--rl-icon);
     block-size: var(--rl-icon);
   }
@@ -850,6 +851,42 @@
   .rl-cord[data-fullscreen] > .rl-icon-fullscreen-exit,
   .rl-cord:not([data-fullscreen]) > .rl-icon-fullscreen-enter {
     display: block;
+    opacity: 1;
+  }
+
+  /* Every icon is pressed into its key as the key sinks, and springs back. */
+  .rl-key > .rl-icon {
+    transition: transform 180ms var(--rl-spring);
+  }
+
+  .rl-key:active > .rl-icon {
+    transform: scale(1.1, 0.82);
+    transition-duration: 50ms;
+  }
+
+  /* A new state's icon pops in where the old one fades out. Only once a hand has touched the player, so nothing
+     animates on first load; under reduced motion the swap is instant. */
+  .rolling[data-awake] .rl-key > .rl-icon {
+    transition:
+      transform 220ms var(--rl-spring),
+      opacity 140ms ease-out,
+      display 140ms allow-discrete;
+  }
+
+  @starting-style {
+    .rolling[data-awake] .rl-key > .rl-icon {
+      opacity: 0;
+      transform: scale(0.55) rotate(-24deg);
+    }
+  }
+
+  /* Settings: the gear turns as the drawer opens. */
+  .rl-drawer[aria-expanded="true"] > .rl-icon {
+    transform: rotate(60deg);
+  }
+
+  .rl-drawer[aria-expanded="true"]:active > .rl-icon {
+    transform: rotate(60deg) scale(1.1, 0.82);
   }
 
   /* Play: a lever in a slot. Down is stopped, up is rolling. */
@@ -1712,9 +1749,17 @@
     translate: 0 -4px;
   }
 
-  /* The locket has left its felt: the icon reads light on dark. */
+  /* The locket has left its felt: the icon reads light on dark, and stays light until the locket has landed again. */
   .rolling[data-machine="3d"] .rl-locket[data-pip] {
     color: var(--rl-cream);
+  }
+
+  .rolling[data-machine="3d"] .rl-locket:not([data-pip]) {
+    transition:
+      translate 90ms,
+      box-shadow 90ms,
+      filter 120ms,
+      color 0s 0.35s;
   }
 
   /* ---------- Full screen: the dock lies over the foot of the picture and hides when the viewer is idle ---------- */
