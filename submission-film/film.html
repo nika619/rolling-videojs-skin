@@ -1,0 +1,131 @@
+<!doctype html>
+<!-- The submission film for Rolling, as code: window.seek(t) paints the frame at t seconds (render.mjs captures it).
+     Every picture is the real player, captured by capture.mjs on the real GPU; nothing in the machine is redrawn. -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Rolling, the film</title>
+<link href="https://api.fontshare.com/v2/css?f[]=switzer@400,500&display=block" rel="stylesheet" />
+<link href="film.css" rel="stylesheet" />
+<script src="../node_modules/gsap/dist/gsap.min.js"></script>
+<script src="../node_modules/gsap/dist/SplitText.min.js"></script>
+</head>
+<body>
+<div id="stage">
+
+  <!-- Opening and end: Kīlauea's lava inside the name, the letters rising through a mask. -->
+  <canvas id="lava-canvas" class="layer" width="1920" height="1080" aria-hidden="true"></canvas>
+  <p id="open-kicker" class="kicker abs" style="left:0;right:0;top:226px;text-align:center">A Video.js 10 skin</p>
+  <p id="open-line" class="lede abs" style="left:0;right:0;top:836px;text-align:center">A marble machine under the film.</p>
+  <div id="marble" class="marble"><i></i></div>
+
+  <!-- Hero: the whole player, its picture the film's own frames at the same moment. -->
+  <section class="scene" id="hero" data-a="3.4" data-b="9.2">
+    <div id="hero-text" class="col" style="top:290px;width:500px">
+      <p class="kicker">Video.js 10 · HTML skin</p>
+      <h2 class="h2 split">The film on top. A machine under it.</h2>
+      <p class="body split">Every control is a mechanism, built over a real, labelled Video.js control.</p>
+    </div>
+    <div id="hero-frame">
+      <img id="hero-img" alt="" /><img id="hero-pic" alt="" />
+    </div>
+    <p id="hero-chip" class="chip"><b class="dot"></b>LIVE&nbsp; rolling-videojs-skin.vercel.app</p>
+  </section>
+
+  <!-- Tour: the whole dock below, live; a brass loupe over the part that moves. -->
+  <section class="scene" id="tour" data-a="8.5" data-b="37.4">
+    <div id="strip-wrap"><img id="strip" alt="" /></div>
+    <svg id="cone" class="layer" viewBox="0 0 1920 1080"><polygon id="cone-fill" /><line id="cone-a" /><line id="cone-b" /><circle id="foot" r="10" /></svg>
+    <div id="loupe"><div id="loupe-in"><img id="loupe-pic" alt="" /><img id="loupe-img" alt="" /></div></div>
+    <svg id="ring" viewBox="-380 -380 760 760"><g id="ring-ticks"></g>
+      <circle r="336" fill="none" stroke="url(#brass)" stroke-width="14" /><circle r="327" fill="none" stroke="#0e0906" stroke-opacity=".7" stroke-width="3" />
+      <defs><linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6d58c" /><stop offset=".45" stop-color="#b8863a" /><stop offset=".7" stop-color="#e2b45a" /><stop offset="1" stop-color="#7a5524" /></linearGradient></defs>
+    </svg>
+    <div id="tour-text"></div>
+    <p id="tour-count" class="kicker abs" style="left:110px;top:96px"></p>
+  </section>
+
+  <!-- Snakes and ladders: the real end and replay, one 60 fps tick per frame. -->
+  <section class="scene" id="snake" data-a="37.2" data-b="40.6">
+    <div class="col" style="top:120px;width:1700px">
+      <p class="kicker">End and replay</p>
+      <h2 class="h1 split">Snakes and ladders.</h2>
+      <p class="body split" style="width:1200px">The snake swallows the marble at the bell; the bulge runs to its tail, and the ladder lifts it back to the start.</p>
+    </div>
+    <div id="snake-band" class="print"><img id="snake-img" alt="" /></div>
+  </section>
+
+  <!-- And the rest: three small loupes. -->
+  <section class="scene" id="rest" data-a="40.4" data-b="43.6">
+    <div class="col" style="top:110px"><p class="kicker">Also on the machine</p><h2 class="h2 split">Even the waiting has a mechanism.</h2></div>
+    <div id="rest-row"></div>
+  </section>
+
+  <!-- Alive: every action ripples through the machine. -->
+  <section class="scene" id="alive" data-a="43.4" data-b="47.8">
+    <div class="col" style="top:96px;width:1700px">
+      <p class="kicker">Alive</p>
+      <h2 class="h1 split">Every action ripples through the machine.</h2>
+    </div>
+    <div id="alive-band" class="print"><img id="alive-img" alt="" /><img id="alive-img2" alt="" /><svg id="ripples" class="layer"></svg><i id="alive-edge" class="edge"></i></div>
+    <div id="alive-notes"></div>
+  </section>
+
+  <!-- Accessibility: the real controls under the wood. -->
+  <section class="scene" id="ctl" data-a="47.6" data-b="51">
+    <div class="col" style="top:96px;width:1700px">
+      <p class="kicker">Accessibility</p>
+      <h2 class="h1 split">Under every part, a real Video.js control.</h2>
+    </div>
+    <div id="ctl-band"><img id="ctl-flat" alt="" /><div id="ctl-top"><img id="ctl-3d" alt="" /></div><i id="ctl-edge" class="edge"></i><svg id="ctl-boxes" class="layer"></svg></div>
+    <p id="ctl-facts" class="facts abs" style="left:110px;top:900px"></p>
+  </section>
+
+  <section class="scene" id="keys" data-a="50.8" data-b="54.4">
+    <div class="col" style="top:96px;width:1100px">
+      <p class="kicker">Keyboard</p>
+      <h2 class="h2 split">Tab through it in the order you see it. A two-tone ring on every stop.</h2>
+    </div>
+    <div id="keycap"><span>Tab</span></div>
+    <p id="focus-read" class="abs"><span class="kicker">Focus</span><b id="focus-label"></b></p>
+    <div id="keys-band" class="print"><img id="keys-img" alt="" /></div>
+  </section>
+
+  <section class="scene" id="calm" data-a="54.2" data-b="57">
+    <div class="col" style="top:96px;width:1700px">
+      <p class="kicker">Reduced motion</p>
+      <h2 class="h1 split">Calm on request.</h2>
+      <p class="body split" style="width:1300px">Under prefers-reduced-motion every state still shows: no travel, no momentum, no ripples.</p>
+    </div>
+    <figure class="pane" id="calm-a"><img alt="" /><figcaption>Motion</figcaption></figure>
+    <figure class="pane" id="calm-b"><img alt="" /><figcaption>prefers-reduced-motion: reduce</figcaption></figure>
+  </section>
+
+  <section class="scene" id="tiers" data-a="56.8" data-b="60.2">
+    <div class="col" style="top:96px;width:1700px">
+      <p class="kicker">Responsive</p>
+      <h2 class="h1 split">Six widths. Never small.</h2>
+      <p class="body split" style="width:1300px">From a desktop to a phone and below: the machine sheds parts as it narrows, and the two smallest are the flat skin.</p>
+    </div>
+    <div id="tier-row"></div>
+  </section>
+
+  <section class="scene" id="mux" data-a="60" data-b="63.8">
+    <div class="col" style="top:250px;width:760px">
+      <p class="kicker">Streaming</p>
+      <h2 class="h1 split">Streamed by Mux.</h2>
+      <p class="chip mono" id="pid"><span class="k">playback id</span><span id="pid-text"></span></p>
+      <p class="body split">Kīlauea 2026, our cut of seven eruptions from USGS footage. Seven chapters, seven chime bars.</p>
+    </div>
+    <div id="mux-frame" class="print"><img id="mux-img" alt="" /></div>
+  </section>
+
+  <p id="end-chip" class="chip big"><b class="dot"></b>rolling-videojs-skin.vercel.app</p>
+  <p id="end-line" class="lede abs" style="left:0;right:0;top:860px;text-align:center">A Video.js 10 skin, streamed by Mux.</p>
+
+  <svg id="grain" class="layer" aria-hidden="true"><filter id="g"><feTurbulence id="turb" type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="1" /><feColorMatrix values="0 0 0 0 .5  0 0 0 0 .45  0 0 0 0 .4  0 0 0 .9 0" /></filter><rect width="100%" height="100%" filter="url(#g)" /></svg>
+  <div id="vignette" class="layer"></div>
+</div>
+<script src="film.js"></script>
+</body>
+</html>
