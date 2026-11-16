@@ -64,4 +64,22 @@ test.describe('the machine sounds', () => {
     await page.locator('#rl-settings').click();
     await expect(page.locator('.rl-sound-item')).toHaveAttribute('aria-checked', 'false');
   });
+
+  test("the switch's label follows the player's language, and Video.js's own pack still loads", async ({ page }) => {
+    await openPlayer(page);
+    const label = page.locator('.rl-sound-item rolling-label');
+    await expect(label).toHaveText('Machine sounds');
+
+    await page.evaluate(() => document.querySelector('media-i18n')!.setAttribute('lang', 'de'));
+    await expect(label).toHaveText('Maschinengeräusche');
+    await expect(page.locator('#rl-menu media-text[token="menu.quality"]').first()).toHaveText('Qualität');
+
+    await page.evaluate(() => document.querySelector('media-i18n')!.setAttribute('lang', 'zh-TW'));
+    await expect(label).toHaveText('機械音效');
+    await page.evaluate(() => document.querySelector('media-i18n')!.setAttribute('lang', 'pt-BR'));
+    await expect(label).toHaveText('Sons da máquina');
+    await page.evaluate(() => document.querySelector('media-i18n')!.setAttribute('lang', 'en'));
+    await expect(label).toHaveText('Machine sounds');
+    await expect(page.locator('#rl-menu media-text[token="menu.quality"]').first()).toHaveText('Quality');
+  });
 });
