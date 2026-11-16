@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rolling: a marble machine skin for Video.js 10</title>
+    <meta name="description" content="A wooden marble machine under the film. The steel marble is the playhead, and every action has its own mechanism over a real, accessible Video.js 10 control." />
+    <meta property="og:title" content="Rolling: a marble machine skin for Video.js 10" />
+    <meta property="og:description" content="The marble is the playhead. Flick it, tap the rail, pull the cork." />
+    <meta property="og:image" content="./img/og.jpg" />
+    <meta name="color-scheme" content="dark" />
+  </head>
+  <body data-edition="walnut">
+    <a class="skip" href="#brief">Skip to the design notes</a>
+    <header class="hero">
+      <p class="eyebrow">A skin for Video.js 10 · Skins Design Challenge 2026</p>
+      <h1>Rolling</h1>
+      <p class="lede">A wooden marble machine under the film. The steel marble on the rail is the playhead: flick it and it rolls on, tap the rail and it rolls there. Every action has its own mechanism, and under every mechanism is a real, labelled Video.js control.</p>
+    </header>
+
+    <main>
+      <section class="stage" aria-label="The player">
+        <div id="player" class="player"></div>
+        <p class="caption">Playing <b>Kīlauea 2026</b>: seven eruptions at the summit, March to November, cut from U.S. Geological Survey footage. Seven episodes, seven chime bars. Try: flick the marble, pull the cork, open the drawer, or use the keyboard (<kbd>Space</kbd> <kbd>J</kbd> <kbd>L</kbd> <kbd>M</kbd> <kbd>F</kbd> <kbd>C</kbd>).</p>
+        <nav class="links" aria-label="More">
+          <a href="./workbench/">Open the workbench</a>
+          <a href="https://github.com/" data-repo>Source code</a>
+        </nav>
+      </section>
+
+      <section class="plan" aria-labelledby="plan-title">
+        <h2 id="plan-title">Every action has its own machine</h2>
+        <p class="intro">No two actions share a mechanism, and none looks like a stock control. The standard icon stays on every key, so nothing has to be learned: the machine is built around the controls, not instead of them.</p>
+        <figure class="drawing">
+          <div class="drawing-frame">
+            <img src="./img/dock-walnut.webp" width="3300" height="546" alt="The walnut dock: rail with marble, ladder, chime bars, snake and bell above a bench of brass and wooden keys." />
+            <ol class="pins" aria-hidden="true">
+              <li style="--x: 4.6%; --y: 80%">1</li><li style="--x: 14.6%; --y: 80%">2</li><li style="--x: 24.8%; --y: 80%">3</li>
+              <li style="--x: 19.8%; --y: 24%">4</li><li style="--x: 2.6%; --y: 30%">5</li><li style="--x: 38.9%; --y: 58%">6</li>
+              <li style="--x: 60%; --y: 55%">7</li><li style="--x: 92.6%; --y: 30%">8</li><li style="--x: 56%; --y: 80%">9</li>
+              <li style="--x: 64.2%; --y: 80%">10</li><li style="--x: 73%; --y: 80%">11</li><li style="--x: 78.9%; --y: 80%">12</li>
+              <li style="--x: 84.2%; --y: 80%">13</li><li style="--x: 90.4%; --y: 80%">14</li><li style="--x: 96.5%; --y: 80%">15</li>
+            </ol>
+          </div>
+        </figure>
+        <table class="map">
+          <thead><tr><th scope="col">#</th><th scope="col">Action</th><th scope="col">Mechanism</th><th scope="col">Real control underneath</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><th scope="row">Play, pause</th><td>A lever drops the brass pin in front of the marble; on pause the pin rises, the marble knocks against it and rocks to rest.</td><td>Play button</td></tr>
+            <tr><td>2</td><th scope="row">Skip 10 seconds</th><td>Two pinball flippers kick the marble back or forward.</td><td>Seek buttons</td></tr>
+            <tr><td>3</td><th scope="row">Time</th><td>A brass drum counter; press it for time remaining. Minutes are burned into the beam like a ruler.</td><td>Time display</td></tr>
+            <tr><td>4</td><th scope="row">Seek</th><td>Drag the marble, flick it and it rolls on with momentum, or tap the rail and it rolls there.</td><td>Time slider</td></tr>
+            <tr><td>5</td><th scope="row">Replay</th><td>The ladder: the way up. It lifts the marble back to the start.</td><td>Play button, ended</td></tr>
+            <tr><td>6</td><th scope="row">Chapters</th><td>A tuned chime bar hangs at each chapter; the marble rings it in passing. Flick across several and they play in order.</td><td>Slider chapters, chapter menu</td></tr>
+            <tr><td>7</td><th scope="row">The way home</th><td>The snake under the beam. It watches the marble, rises as the film nears its end, and swallows it at the bell.</td><td>Ended state</td></tr>
+            <tr><td>8</td><th scope="row">End</th><td>The marble drops into a brass bell.</td><td>Ended state</td></tr>
+            <tr><td>9</td><th scope="row">Mute</th><td>A cork in the brass horn. Pull it and the sound comes back with a pop.</td><td>Mute button</td></tr>
+            <tr><td>10</td><th scope="row">Volume</th><td>Swell shutters, as on a pipe organ: the slats open with the volume and the film's light leaks between them.</td><td>Volume slider</td></tr>
+            <tr><td>11</td><th scope="row">Speed</th><td>A ratchet jack tilts the rail; steeper is faster. A die climbs the rack: six speeds, six faces.</td><td>Playback rate</td></tr>
+            <tr><td>12</td><th scope="row">Captions</th><td>A paper roll on a key feeds its strip as captions come on.</td><td>Captions button</td></tr>
+            <tr><td>13</td><th scope="row">Picture-in-picture</th><td>A brass locket opens on the live film inside it, then leaves the bench.</td><td>PiP button</td></tr>
+            <tr><td>14</td><th scope="row">Settings</th><td>A felt-lined drawer slides down the slope; each setting is a peg in a hole.</td><td>Settings menu</td></tr>
+            <tr><td>15</td><th scope="row">Full screen</th><td>A pull cord with a wooden bead.</td><td>Fullscreen button</td></tr>
+            <tr><td>–</td><th scope="row">Preview</th><td>A brass loupe rides the rail and shows that moment, its time and its chapter.</td><td>Slider thumbnail</td></tr>
+            <tr><td>–</td><th scope="row">Loading, waiting</th><td>Sleepers drop in under the rods as the film loads; while it buffers the marble spins against the pin.</td><td>Buffer, buffering indicator</td></tr>
+            <tr><td>–</td><th scope="row">Cast</th><td>A catapult throws the film to the other screen. Present only when a device is.</td><td>Cast, AirPlay buttons</td></tr>
+            <tr><td>–</td><th scope="row">Error</th><td>The marble lies in a tray with “Put it back”.</td><td>Error dialog, retry</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="story" aria-labelledby="snake-title">
+        <div class="story-text">
+          <h2 id="snake-title">Snakes and ladders</h2>
+          <p>The rail is a board. The die on the jack sets the pace, the ladder is the way up and the snake is the way home. Its head follows the marble along the rail and rises to face you as the film nears its end. Play it again and the bell tips the marble into its mouth, a bulge runs down its back to the tail, and the ladder carries the marble to the start.</p>
+        </div>
+        <figure>
+          <img src="./img/snake.webp" width="1812" height="1700" loading="lazy" alt="Ten frames: the marble drops from the bell into the snake's mouth, a bulge travels to the tail, and the marble comes out at the foot of the ladder." />
+          <figcaption>Replay, frame by frame, read left to right.</figcaption>
+        </figure>
+      </section>
+
+      <section class="alive" aria-labelledby="alive-title">
+        <h2 id="alive-title">It is alive</h2>
+        <p class="intro">Every action keeps its own mechanism and sends a ripple through the rest of the machine. Play: the lever twangs, the pin bounces, a glint runs down the rods and the sleepers lift in a wave. Mute: the cork leaps, the horn trembles, the slats flutter. Speed: the plate clicks once per ratchet tooth and the die bounces as it lands. The film lights all of it: a 32 × 18 canvas reads three colours from each frame, the lamps take them, the floor mirrors the picture and the marble reflects it.</p>
+        <div class="strips">
+          <figure><img src="./img/locket.webp" width="2292" height="790" loading="lazy" alt="Eight frames: the locket opens on the live film inside it, then leaves its seat." /><figcaption>Picture-in-picture: the locket opens on the live film, then leaves.</figcaption></figure>
+          <figure><img src="./img/cork.webp" width="2892" height="730" loading="lazy" alt="Eight frames: the cork leaps out of the horn and bounces on its bail." /><figcaption>Unmute: the cork pops and bounces on its bail.</figcaption></figure>
+        </div>
+        <p class="note">Nothing ripples before your first touch, nothing ripples with reduced motion on, and once the machine settles it draws no frames at all.</p>
+      </section>
+
+      <section class="brief" id="brief" aria-labelledby="brief-title">
+        <h2 id="brief-title">Against the brief</h2>
+        <p class="intro">The challenge scores four things. Here is each, in the brief's own words, and what Rolling does about it, with the evidence.</p>
+
+        <article>
+          <h3>Visual design and originality <span>10</span></h3>
+          <blockquote>“A distinctive concept with cohesive typography, color, iconography, and layout.”</blockquote>
+          <ul>
+            <li>One object, understood at a glance: a marble run whose marble is the playhead. Every part is a control or a state; nothing is decoration.</li>
+            <li>One material palette (walnut or maple, satin brass, steel, felt, cream paper), one serif for every numeral and label, Video.js's own icons burned into the keys.</li>
+            <li>Two editions from the same four properties: walnut for dark pages, maple for light ones. Drawn live in three.js with no image files: grain, brass and the snake's diamond back are generated in shaders.</li>
+          </ul>
+        </article>
+
+        <article>
+          <h3>Usability and interaction <span>5</span></h3>
+          <blockquote>“Intuitive controls and a layout that works across player sizes and touch devices.”</blockquote>
+          <ul>
+            <li>Standard icons and tooltips on every key. The mechanisms add feedback; they never hide what a control is.</li>
+            <li>Six size tiers by container width, from 1100 px down to 180 px, dropping secondary controls first, down to the lever and the horn at the smallest, in the spirit of Video.js's small-player work (<a href="https://github.com/videojs/video.js/pull/9702">#9702</a>). Before the first play only the lever is lit (<a href="https://github.com/videojs/video.js/pull/9696">#9696</a>).</li>
+            <li>On touch: 44 px targets, tap the rail to roll there, flick the marble to scrub (<a href="https://github.com/videojs/video.js/issues/9428">#9428</a>, swipe to scrub).</li>
+          </ul>
+        </article>
+
+        <article>
+          <h3>Accessibility <span>5</span></h3>
+          <blockquote>“Controls stay readable over any video, keyboard focus is visible, touch targets are comfortable, and motion calms down when reduced motion is on.”</blockquote>
+          <ul>
+            <li>Inline, no control sits on the picture: the dock is solid wood under it, so contrast never depends on the footage (the problem behind <a href="https://github.com/videojs/video.js/pull/9675">#9675</a>).</li>
+            <li>A two-tone focus ring that shows on walnut, maple and light video alike (<a href="https://github.com/videojs/video.js/issues/9705">#9705</a>). Keyboard order matches visual order; Escape leaves the drawer and returns focus to its key; Video.js hotkeys, gestures and the status announcer are kept.</li>
+            <li>Reduced motion: the marble slides without momentum or spin, mechanisms change state without travel, nothing ripples. Forced colours and no WebGL: the flat skin, complete on its own, takes over.</li>
+            <li>axe-core: no violations at 1100, 520 and 240 px, at rest, playing and with the drawer open, in Chromium, Firefox and WebKit. One rule is filtered and said here: <code>label-content-name-mismatch</code> on the time counter, from Video.js's own <code>&lt;media-time toggle&gt;</code>, whose name reads “Show remaining time” while it shows the elapsed time.</li>
+          </ul>
+        </article>
+
+        <article>
+          <h3>Execution and polish <span>5</span></h3>
+          <blockquote>“A complete, functional skin with consistent styling across controls, menus, and player states.”</blockquote>
+          <ul>
+            <li>159 browser tests pass in Chromium, Firefox, WebKit and a phone profile: every control, keyboard-only use, every tier, both editions, reduced motion, the error tray, the end and replay, the 3D machine and its reactions. 51 unit tests cover the physics, the layout maths and the clock.</li>
+            <li>The 3D machine is a lazy chunk (168 kB gzipped) that loads only when the player is on screen, WebGL 2 is there and reduced data is off. If the GPU context is lost, it falls back to the flat skin without losing the player's state.</li>
+            <li>Frame budget, measured on a laptop RTX 4050: 61 fps while dragging, 30 fps during playback, and zero frames when paused and settled or scrolled off screen.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="honest" aria-labelledby="honest-title">
+        <h2 id="honest-title">What is real, and what is drawn</h2>
+        <ul>
+          <li><b>Real:</b> every control is a Video.js 10 element with its own name, keyboard handling and focus ring. The player's store drives everything.</li>
+          <li><b>Drawn:</b> the machine is a three.js scene laid over those controls. It reads their positions and states from the page; it never talks to the player.</li>
+          <li><b>Not yet tested:</b> real iPhones and Android phones, and Safari itself. Playwright's WebKit stands in for Safari.</li>
+        </ul>
+      </section>
+
+      <section class="use" aria-labelledby="use-title">
+        <h2 id="use-title">Use it</h2>
+        <p>Rolling is a Video.js 10 HTML skin, made with <code>videojs skin create</code>. Copy <code>src/</code> into your project, import the skin, and use its template inside <code>&lt;video-player&gt;</code>. Pick the edition, or let the page's colour scheme pick it:</p>
+        <pre><code>&lt;media-container class="media-skin rolling" data-edition="maple"&gt;…</code></pre>
+        <p>The public Video.js properties work as usual: <code>--media-accent-color</code>, <code>--media-font-family</code>, <code>--media-border-radius</code> and the rest.</p>
+      </section>
+    </main>
+
+    <footer>
+      <p>Film: footage by the U.S. Geological Survey, Hawaiian Volcano Observatory (M. Patrick, L. Gallant, D. Downs and the HVO webcams), public domain. Built on Video.js 10.4 (Apache-2.0) and three.js (MIT). Rolling is licensed Apache-2.0.</p>
+    </footer>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

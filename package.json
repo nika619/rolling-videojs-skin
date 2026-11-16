@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build --config site/vite.config.ts && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "deploy": "node apps/preview/deploy.mjs",
@@ -13,7 +13,8 @@
     "deploy:netlify": "npx --yes netlify-cli@27 deploy --build",
     "deploy:cloudflare": "npm run build && npx --yes wrangler@4 pages deploy dist --project-name rolling",
     "test": "vitest run",
-    "test:e2e": "playwright test --grep-invert @timing && playwright test --grep @timing --workers=1"
+    "test:e2e": "playwright test --grep-invert @timing && playwright test --grep @timing --workers=1",
+    "dev:site": "vite --config site/vite.config.ts --port 5190"
   },
   "dependencies": {
     "@videojs/html": "10.4.0",

@@ -1,0 +1,142 @@
+/* The entry page: a dark walnut workshop, in the skin's own serif and brass. */
+:root {
+  color-scheme: dark;
+  --bg: #120b07;
+  --panel: #1a100a;
+  --ink: #f4e7cf;
+  --muted: #c4ae8c;
+  --brass: #d9b062;
+  --line: rgb(244 231 207 / 0.13);
+  --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Menlo, Consolas, monospace;
+  --measure: 66ch;
+  background: var(--bg);
+  color: var(--ink);
+  font: 18px/1.6 var(--serif);
+  -webkit-text-size-adjust: 100%;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; overflow-x: clip; }
+img { display: block; max-width: 100%; height: auto; }
+a { color: var(--brass); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; border-radius: 2px; }
+code, kbd, pre { font-family: var(--mono); font-size: 0.86em; }
+kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 0.35em; background: var(--panel); }
+
+.skip { position: absolute; left: 16px; top: -48px; padding: 8px 12px; background: var(--brass); color: #1b1006; z-index: 10; }
+.skip:focus { top: 16px; }
+
+.hero, main > section, footer { width: min(1100px, 100% - 32px); margin-inline: auto; }
+
+.hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+  gap: 0 clamp(24px, 5vw, 72px);
+  padding-block: clamp(20px, 3vw, 36px) 4px;
+}
+.hero .eyebrow { grid-column: 1 / -1; }
+main > .stage + section { margin-top: 0; }
+.hero { inline-size: min(100% - 32px, max(640px, (100svh - 420px) * 16 / 9)); }
+@media (width < 760px) { .hero { grid-template-columns: 1fr; } }
+.eyebrow { margin: 0; font: 600 12px/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--brass); }
+h1 {
+  margin: 0.08em 0 0.12em;
+  font-size: clamp(56px, 6.4vw, 92px);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+.lede { margin: 0 0 0.7em; max-width: 46ch; font-size: clamp(17px, 1.5vw, 19px); line-height: 1.5; color: var(--ink); }
+
+/* The player sits in a pool of its own film's light (the film eye writes --rl-film-* on the skin; main.ts lifts them here). */
+.stage { position: relative; padding-block: 16px 8px; }
+.stage .caption, .stage .links { inline-size: min(100%, max(640px, (100svh - 420px) * 16 / 9)); margin-inline: auto; }
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0 -8% 10%;
+  z-index: -1;
+  background: radial-gradient(60% 55% at 50% 45%, var(--glow, rgb(255 110 40 / 0.18)), transparent 70%);
+  filter: blur(24px);
+  transition: background 1.2s linear;
+}
+.player {
+  /* The whole player (16:9 film over a dock about 190px tall) fits the first screen, so the machine is seen at once. */
+  inline-size: min(100%, max(640px, (100svh - 420px) * 16 / 9));
+  margin-inline: auto;
+  border-radius: 14px; box-shadow: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 30px 80px -30px rgb(0 0 0 / 0.9), 0 8px 24px rgb(0 0 0 / 0.5); }
+.caption { max-width: var(--measure); margin: 20px 0 0; color: var(--muted); font-size: 16px; }
+.caption b { color: var(--ink); font-weight: 600; }
+.links { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 12px; font: 600 13px/1.4 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; }
+
+main > section { padding-block: clamp(64px, 10vw, 128px) 0; }
+h2 { margin: 0 0 16px; font-size: clamp(34px, 5vw, 56px); font-weight: 400; line-height: 1.05; letter-spacing: -0.015em; }
+.intro { max-width: var(--measure); margin: 0 0 32px; color: var(--muted); }
+.note { max-width: var(--measure); color: var(--muted); font-style: italic; }
+
+/* The plan drawing: the real dock, numbered like a parts diagram. */
+.drawing { margin: 0 0 40px; }
+.drawing-frame { position: relative; border-radius: 10px; overflow: hidden; box-shadow: 0 20px 60px -20px rgb(0 0 0 / 0.9); }
+.pins { list-style: none; margin: 0; padding: 0; }
+.pins li {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  display: grid;
+  place-items: center;
+  inline-size: clamp(16px, 2.1vw, 24px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #1b1006;
+  color: var(--brass);
+  border: 1.5px solid var(--brass);
+  font: 700 clamp(8px, 1vw, 11px)/1 var(--mono);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.6);
+  translate: -50% calc(-50% - clamp(22px, 3.4vw, 40px));
+}
+
+.map { width: 100%; border-collapse: collapse; font-size: 16px; }
+.map th, .map td { padding: 12px 12px 12px 0; text-align: left; vertical-align: top; border-top: 1px solid var(--line); }
+.map thead th { font: 600 11px/1.4 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); border-top: 0; }
+.map tbody th { font-weight: 600; white-space: nowrap; }
+.map td:first-child { font: 700 12px/1.9 var(--mono); color: var(--brass); width: 2.5em; }
+.map td:last-child { color: var(--muted); font-size: 15px; }
+@media (width < 760px) {
+  .map thead { display: none; }
+  .map tr { display: grid; grid-template-columns: 2.5em 1fr; border-top: 1px solid var(--line); padding-block: 10px; }
+  .map th, .map td { border: 0; padding: 2px 0; }
+  .map td:nth-child(n + 3) { grid-column: 2; }
+}
+
+.story { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: start; }
+.story p { color: var(--muted); }
+@media (width < 860px) { .story { grid-template-columns: 1fr; } }
+
+figure { margin: 0; }
+figure img { border-radius: 8px; }
+figcaption { margin-top: 10px; color: var(--muted); font-size: 14px; font-style: italic; }
+.strips { display: grid; gap: 32px; margin-bottom: 24px; }
+
+.brief { counter-reset: none; }
+.brief article { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 8px 48px; padding-block: 32px; border-top: 1px solid var(--line); }
+.brief h3 { grid-row: span 2; margin: 0; font-size: 26px; font-weight: 400; line-height: 1.2; }
+.brief h3 span { display: block; margin-top: 8px; font: 600 12px/1.4 var(--mono); letter-spacing: 0.12em; color: var(--brass); }
+.brief h3 span::after { content: " points"; }
+.brief blockquote { margin: 0; font-style: italic; color: var(--ink); }
+.brief ul { margin: 0; padding-left: 1.1em; color: var(--muted); }
+.brief li + li { margin-top: 8px; }
+@media (width < 860px) { .brief article { grid-template-columns: 1fr; } .brief h3 { grid-row: auto; } }
+
+.honest ul { max-width: var(--measure); padding-left: 1.1em; color: var(--muted); }
+.honest b, .use code { color: var(--ink); }
+.use p { max-width: var(--measure); color: var(--muted); }
+.use pre { overflow-x: auto; padding: 16px 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; color: var(--ink); }
+
+footer { padding-block: 96px 64px; color: var(--muted); font-size: 14px; }
+footer p { max-width: var(--measure); border-top: 1px solid var(--line); padding-top: 24px; }
+
+@media (prefers-reduced-motion: reduce) { .stage::before { transition: none; } }

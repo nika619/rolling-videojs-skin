@@ -28,9 +28,11 @@
   "include": [
     "src",
     "apps",
+    "site",
     "tests"
   ],
   "exclude": [
-    "tests/fixture/vite.config.ts"
+    "tests/fixture/vite.config.ts",
+    "site/vite.config.ts"
   ]
 }
