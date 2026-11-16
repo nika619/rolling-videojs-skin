@@ -916,7 +916,8 @@ export function buildMachine(build: Build): Updater[] {
       // With sound on, the throat glows with the level; a change of volume swells it for a moment.
       const { muted, volume } = frame.state;
       const swell = Math.exp(-2.4 * Math.min(since(frame, 'volume'), 9));
-      busy = move(lit, muted ? 0 : volume * (0.45 + 0.55 * swell), 12, 1, frame) || busy;
+      // Resting glow kept low so the cream icon over it stays above 7:1; the swell still flares to full.
+      busy = move(lit, muted ? 0 : volume * (0.3 + 0.7 * swell), 12, 1, frame) || busy;
       mats.hornGlow.opacity = lit.x;
       glow.visible = lit.x > 0.01;
       return busy || tMute < ringSpan(9) || tUnmute < ringSpan(5);

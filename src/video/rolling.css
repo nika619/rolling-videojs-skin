@@ -1889,6 +1889,11 @@
     background: none;
   }
 
+  /* The throat glows with the volume behind the speaker icon; a dark halo keeps the cream strokes readable on it. */
+  .rolling[data-machine="3d"] .rl-horn > .rl-icon {
+    filter: drop-shadow(0 0 1px var(--rl-dark)) drop-shadow(0 0 2.5px rgb(0 0 0 / 0.7));
+  }
+
   .rolling[data-machine="3d"] :is(.rl-key, .rl-counter, .rl-shutters-knob):not(:focus-visible),
   .rolling[data-machine="3d"] .rl-drawer > .rl-icon,
   .rolling[data-machine="3d"] .rl-marble:not(:focus-visible) .rl-ball {
