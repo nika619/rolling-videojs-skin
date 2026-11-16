@@ -121,6 +121,29 @@ const struck = (frame: Frame, name: ImpulseName, seen: Seen): boolean => {
   return !frame.calm && frame.now - impulse.at < 0.5;
 };
 
+/** A fixed scatter in [0, 1): the same moment always gives the same answer, so a schedule needs no state. */
+const scatter = (n: number): number => {
+  const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return s - Math.floor(s);
+};
+
+/** The snake blinks every three or four seconds, at an uneven moment, and now and then twice. 0 at rest, 1 shut. */
+function idleBlink(now: number): number {
+  if (!(now >= 0)) return 0;
+  const k = Math.floor(now / 3.7);
+  const at = k * 3.7 + scatter(k) * 2.4;
+  return Math.max(hump(now - at, 0.15), scatter(k + 0.5) > 0.65 ? hump(now - at - 0.3, 0.15) : 0);
+}
+
+/** And in most spells of seven seconds it tastes the air: the tongue darts out, flickers and goes back. */
+function idleFlick(now: number): number {
+  if (!(now >= 0)) return 0;
+  const k = Math.floor(now / 7.1);
+  if (scatter(k + 9.1) < 0.3) return 0;
+  const t = now - (k * 7.1 + 1 + scatter(k + 3.3) * 4.5);
+  return t < 0 || t > 0.55 ? 0 : Math.sqrt(hump(t, 0.55)) * (0.75 + 0.25 * Math.sin(t * 46));
+}
+
 function roundRect(w: number, h: number, radius: number, into: Shape | Path = new Shape()): Shape | Path {
   const r = Math.max(0.01, Math.min(radius, w / 2, h / 2));
   const x = -w / 2;
@@ -517,14 +540,20 @@ export function buildMachine(build: Build): Updater[] {
       const tSeek = since(frame, 'seek');
       // Unmute: the cork's pop makes it flinch, duck and blink.
       const tUnmute = since(frame, 'unmute');
-      const blink = Math.max(hump(tPause, 0.16), hump(tSeek, 0.14), hump(tUnmute - 0.03, 0.14));
+      // While the film plays it is alive: it blinks every few seconds and now and then tastes the air.
+      const idle = frame.state.started && !frame.state.paused && !ended && t < 0 && !frame.calm ? frame.now : Number.NaN;
+      const flick = idleFlick(idle);
+      const blink = Math.max(hump(tPause, 0.16), hump(tSeek, 0.14), hump(tUnmute - 0.03, 0.14), idleBlink(idle));
+      busy ||= blink > 0 || flick > 0;
       busy ||= tPause < 0.16 || tSeek < ringSpan(4) || tUnmute < ringSpan(7);
       pose.rotation.y += ring(tSeek, 2.2, 4) * 0.2 + ring(tUnmute, 6, 7) * 0.28;
       head.position.y -= hump(tUnmute, 0.4) * snakeR * 0.6;
       for (const eyeball of eyes) eyeball.scale.y = 1 - 0.86 * blink;
       jaw.rotation.z = -watch.jaw.x * 0.55;
-      tongue.scale.x = Math.max(0.0001, watch.tongue.x);
-      tongue.visible = watch.tongue.x > 0.02;
+      const out = Math.max(watch.tongue.x, flick);
+      tongue.scale.x = Math.max(0.0001, out);
+      tongue.visible = out > 0.02;
+      tongue.rotation.y = flick > 0 ? Math.sin(frame.now * 50) * 0.3 : 0;
       neck.visible = rise > 0.5;
       neck.position.set(neckFoot.x, neckFoot.y + rise / 2, neckFoot.z);
       neck.scale.y = Math.max(0.01, rise);
