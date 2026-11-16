@@ -501,14 +501,18 @@ export function buildMachine(build: Build): Updater[] {
       brow.rotation.x = side * 0.35;
     }
     const fork = new Shape();
-    fork.moveTo(0, -0.45);
-    fork.lineTo(headR * 0.9, -0.45);
-    fork.lineTo(headR * 1.4, -headR * 0.28);
-    fork.lineTo(headR * 1.05, 0);
-    fork.lineTo(headR * 1.4, headR * 0.28);
-    fork.lineTo(headR * 0.9, 0.45);
-    fork.lineTo(0, 0.45);
-    const tongue = mesh(pose, new ShapeGeometry(fork), mats.tongue, headR * 1.75, -headR * 0.16, 0, false);
+    fork.moveTo(0, -0.65);
+    fork.lineTo(headR * 1.15, -0.65);
+    fork.lineTo(headR * 1.85, -headR * 0.34);
+    fork.lineTo(headR * 1.4, 0);
+    fork.lineTo(headR * 1.85, headR * 0.34);
+    fork.lineTo(headR * 1.15, 0.65);
+    fork.lineTo(0, 0.65);
+    // The tongue leaves the mouth at a droop: a raised head tilts its snout toward the viewer, and a tongue held
+    // straight out of it would point along the line of sight and vanish.
+    const tongueRoot = put(pose, new Group(), headR * 1.55, -headR * 0.2, 0);
+    tongueRoot.rotation.z = -0.5;
+    const tongue = mesh(tongueRoot, new ShapeGeometry(fork), mats.tongue, 0, 0, 0, false);
     tongue.rotation.x = -Math.PI / 2;
     tongue.scale.x = 0.0001;
     // The neck shows only while the head is raised: from the end of the body up to the pivot.
@@ -526,13 +530,16 @@ export function buildMachine(build: Build): Updater[] {
       const watching = -2.85 + 0.25 * clamp(marble.x, 0, 1);
       let busy = move(watch.yaw, ended || swallowing ? -1.75 : watching + (-1.75 - watching) * near, 9, 0.8, frame);
       busy = move(watch.lift, near, 10, 0.75, frame) || busy;
-      busy = move(watch.jaw, swallowing ? 1 : t >= 0.34 && t < 0.5 ? 0 : ended ? 0.8 : near * 0.3, swallowing ? 30 : 14, 0.7, frame) || busy;
+      busy = move(watch.jaw, swallowing ? 1 : t >= 0.34 && t < 0.5 ? 0 : ended ? 1 : near * 0.3, swallowing ? 30 : 14, 0.7, frame) || busy;
       busy = move(watch.tongue, ended && t < 0 ? 1 : 0, 22, 0.6, frame) || busy;
       // Play: the head perks up and turns to the marble, as if it had heard the gate.
       const tPlay = since(frame, 'play');
       const perk = hump(tPlay, 1.1);
       busy ||= tPlay < 1.1;
-      const rise = watch.lift.x * snakeR * 1.3;
+      // Raised, it stands taller and its head swells a little, as a snake's does when it rears.
+      const rise = watch.lift.x * snakeR * 1.8;
+      const swell = 1 + 0.22 * watch.lift.x;
+      head.scale.set(dir * swell, swell, swell);
       head.position.y = neckFoot.y + rise + perk * snakeR * 0.7;
       pose.rotation.set(0, watch.yaw.x + ring(tPlay, 1.4, 3) * 0.22, watch.lift.x * 0.45 + perk * 0.35);
       // Pause: the snake blinks, as if the stop had caught its eye. A seek makes it blink and glance after the marble.
@@ -549,7 +556,7 @@ export function buildMachine(build: Build): Updater[] {
       pose.rotation.y += ring(tSeek, 2.2, 4) * 0.2 + ring(tUnmute, 6, 7) * 0.28;
       head.position.y -= hump(tUnmute, 0.4) * snakeR * 0.6;
       for (const eyeball of eyes) eyeball.scale.y = 1 - 0.86 * blink;
-      jaw.rotation.z = -watch.jaw.x * 0.55;
+      jaw.rotation.z = -watch.jaw.x * 0.72;
       const out = Math.max(watch.tongue.x, flick);
       tongue.scale.x = Math.max(0.0001, out);
       tongue.visible = out > 0.02;
