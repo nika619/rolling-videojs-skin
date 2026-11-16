@@ -251,6 +251,10 @@ main > section { padding-inline: var(--m); }
 /* The reel sizes itself inside its row, so the heading and the text never ride over it. */
 .is-scene .snakes-film { position: relative; min-block-size: 0; margin-top: 24px; }
 .is-scene .reel { display: block; position: absolute; inset: 0; margin: auto; inline-size: auto; block-size: auto; max-inline-size: min(100%, 1180px); max-block-size: 100%; }
+/* On a phone the reel shows the middle of each frame, where the camera keeps the marble. */
+@media (width < 720px) {
+  .is-scene .reel { inset: 0; margin-block: auto; inline-size: 100%; max-inline-size: none; aspect-ratio: 4 / 3; object-fit: cover; }
+}
 /* The described stills stay for screen readers while the reel plays them. */
 .is-scene .frames { position: absolute; inline-size: 1px; block-size: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); }
 @media (width >= 1000px) {
