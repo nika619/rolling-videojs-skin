@@ -1744,9 +1744,10 @@
     box-shadow: none;
   }
 
-  /* A drawer comes out toward the viewer, which is up the screen. */
+  /* The open drawer slides down the slope toward the viewer, seven pixels down the screen: its knob, hit area and
+     ring go with it. */
   .rolling[data-machine="3d"] .rl-drawer[aria-expanded="true"] {
-    translate: 0 -4px;
+    translate: 0 7px;
   }
 
   /* The locket has left its felt: the icon reads light on dark, and stays light until the locket has landed again. */

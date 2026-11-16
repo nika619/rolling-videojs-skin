@@ -1152,7 +1152,8 @@ export function buildMachine(build: Build): Updater[] {
     });
   }
 
-  // Settings: a drawer in the bench. It slides out while its menu is open.
+  // Settings: a drawer in the bench. It slides out while its menu is open: down the slope toward the viewer, since
+  // from this camera a move straight out of the deck hardly shows, uncovering its felt and the pegs in their holes.
   if (boxes.drawer) {
     const { w, h } = boxes.drawer;
     const hl = alongSlope(h);
@@ -1160,6 +1161,11 @@ export function buildMachine(build: Build): Updater[] {
     const drawer = put(deck, new Group(), at.x, at.y, 0);
     const pull = mem('drawer', () => spring(0));
     const knob = u * 3.6;
+    // Each setting is a peg moved between holes.
+    mesh(deck, plate(w - u * 1.5, hl - u, 0.4, u * 0.6, 0.15), mats.felt, at.x, at.y, 0.1, false);
+    for (let i = 0; i < 4; i++) {
+      mesh(deck, post(u * 0.45, u * 0.55, 3, 12), mats.brassPolished, at.x + (i - 1.5) * w * 0.2 + (i % 2) * u * 0.6, at.y + hl / 2 - u, 0.4, false);
+    }
 
     mesh(drawer, plate(w, hl, KEY + 1, u * 0.75, 1.3), mats.wood('drawer', 0.4));
     mesh(drawer, bezel(w - u * 3, hl - u * 3, 0.7, 0.6, u * 0.5), mats.dark, 0, 0, KEY + 0.7, false);
@@ -1181,7 +1187,10 @@ export function buildMachine(build: Build): Updater[] {
     updaters.push((frame) => {
       // The drawer runs out a little past its stop and back, and its knob nods with the jolt.
       const busy = move(pull, frame.state.drawer ? 1 : frame.pressed === 'drawer' ? -0.4 : 0, 28, 0.38, frame);
-      drawer.position.z = pull.x * 12;
+      // Open, it stands a little proud and slides seven pixels down the screen (the DOM gear follows it); pressed, it sinks.
+      const open = Math.max(0, pull.x);
+      drawer.position.y = at.y + open * (settle(3) - alongSlope(7));
+      drawer.position.z = pull.x < 0 ? pull.x * 12 : open * 3;
       const tOpen = since(frame, 'open') - 0.08;
       handle.rotation.x = ring(tOpen, 5.5, 5) * 0.22;
       return busy || tOpen < ringSpan(5);
