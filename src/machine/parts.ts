@@ -20,6 +20,7 @@ import {
   Object3D,
   Path,
   Quaternion,
+  RingGeometry,
   Shape,
   ShapeGeometry,
   SphereGeometry,
@@ -1027,33 +1028,61 @@ export function buildMachine(build: Build): Updater[] {
   if (boxes.locket) {
     const radius = Math.min(boxes.locket.w, alongSlope(boxes.locket.h)) / 2;
     const group = key('locket', boxes.locket);
-    const away = mem('locket', () => spring(0));
-    const locket = mesh(
-      group,
+    const away = mem('locket', () => ({ out: spring(0), lid: spring(0) }));
+    // The case and its lid leave together.
+    const seat = put(group, new Group());
+    mesh(
+      seat,
       turned([
         [radius, 0],
         [radius, KEY - 2.4],
         [radius * 0.97, KEY - 0.6],
         [radius * 0.91, KEY],
-        [radius * 0.87, KEY - 0.9],
-        [radius * 0.82, KEY - 0.9],
-        [radius * 0.78, KEY],
-        [0, KEY],
+        [radius * 0.86, KEY - 0.5],
+        [radius * 0.83, KEY - 1.8],
+        [0, KEY - 1.8],
       ]),
       mats.brassPolished,
       0,
       0,
       -KEY
     );
+    // Inside, under glass, the film itself: the picture the locket carries away.
+    mesh(seat, new CircleGeometry(radius * 0.8, 40), mats.picture, 0, 0, -1.75, false);
+    // The lid, hinged at the top under the bail ring.
+    const hinge = put(seat, new Group(), 0, radius * 0.8, -1.8);
+    mesh(
+      hinge,
+      turned([
+        [radius * 0.8, 0],
+        [radius * 0.8, 1.1],
+        [radius * 0.75, 1.7],
+        [radius * 0.66, 1.9],
+        [0, 1.9],
+      ]),
+      mats.brassPolished,
+      0,
+      -radius * 0.8,
+      0
+    );
     mesh(deck, new CircleGeometry(radius * 0.93, 32), mats.felt, group.position.x, group.position.y, 0.3, false);
+    // The seat the locket leaves behind: a ring pressed into the felt.
+    const dent = mesh(deck, new RingGeometry(radius * 0.84, radius * 0.97, 40), mats.dark, group.position.x, group.position.y, 0.36, false);
     mesh(deck, new TorusGeometry(u * 1.1, 1.1, 8, 20), mats.brassPolished, group.position.x, group.position.y + radius + u * 0.9, 1.4, false);
     updaters.push((frame) => {
-      const busy = move(away, frame.state.pip ? 1 : 0, 15, 0.7, frame);
-      const k = clamp(away.x, 0, 1);
-      locket.position.set(k * radius * 1.6, k * radius * 2.4, -KEY + k * 46);
-      locket.scale.setScalar(Math.max(0.0001, 1 - k));
-      locket.visible = k < 0.985;
-      return busy;
+      const { pip } = frame.state;
+      // First the lid flips open on the picture inside, then the locket leaves with it; back again, it lands, shows
+      // the picture a moment, and the lid shuts.
+      const tPip = since(frame, 'pip');
+      let busy = move(away.lid, pip || tPip < 0.6 ? 1 : 0, 30, 0.55, frame);
+      busy = move(away.out, pip && !(tPip < 0.4) ? 1 : 0, 15, 0.7, frame) || busy;
+      const k = clamp(away.out.x, 0, 1);
+      hinge.rotation.x = -away.lid.x * 2.3;
+      seat.position.set(k * radius * 1.6, k * radius * 2.4, k * 46);
+      seat.scale.setScalar(Math.max(0.0001, 1 - k));
+      seat.visible = k < 0.985;
+      dent.visible = k > 0.15;
+      return busy || tPip < 0.6;
     });
   }
 

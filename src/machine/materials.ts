@@ -346,6 +346,8 @@ export class Materials {
   readonly tongue: MeshPhysicalMaterial;
   /** Light from inside the shutter box: the film, seen through the slats. */
   readonly leak: MeshPhysicalMaterial;
+  /** The film inside the locket, under glass: the middle of the picture, cut round. */
+  readonly picture: MeshPhysicalMaterial;
   /** Where the swallowed marble is along the snake (0 head, 1 tail) and how far it swells the body. */
   readonly bulge = { at: { value: 0 }, size: { value: 0 } };
   /** The colour of the beam, which the marble mirrors from below. */
@@ -544,6 +546,18 @@ export class Materials {
     );
     this.mouth = this.#keep(new MeshPhysicalMaterial({ color: srgb(0x6a1018), roughness: 0.55, side: DoubleSide }));
     this.tongue = this.#keep(new MeshPhysicalMaterial({ color: srgb(0xc8262b), roughness: 0.5, side: DoubleSide }));
+    this.picture = this.#keep(
+      patched({ color: srgb(0x000000), roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.04 }, film, {
+        key: 'picture',
+        glow: /* glsl */ `
+          {
+            vec2 rlP = (vRlUv - 0.5) * vec2(0.5625, 1.0) + 0.5;
+            vec3 rlC = rlZone(rlP.x);
+            if (uFilmOn > 0.5) rlC = rlToLinear(textureLod(uFilm, rlP, 0.5).rgb);
+            totalEmissiveRadiance += rlC * 1.15;
+          }`,
+      })
+    );
     this.leak = this.#keep(
       patched({ color: srgb(0x000000), roughness: 1 }, film, {
         key: 'leak',
