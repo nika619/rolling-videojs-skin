@@ -501,6 +501,8 @@ test.describe('editions and states', () => {
 test.describe('accessibility scan', () => {
   for (const width of [1100, 520, 240]) {
     test(`axe finds nothing at ${width}px: at rest, playing, drawer open`, async ({ page }) => {
+      // Three full scans: about 12 s alone in Firefox, past 30 s when four workers share the CPU.
+      test.slow();
       await openPlayer(page, `width=${width}`);
       const scan = async (label: string) => {
         const results = await new AxeBuilder({ page }).include('media-container').analyze();
