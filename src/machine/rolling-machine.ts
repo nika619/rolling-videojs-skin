@@ -155,9 +155,6 @@ export class RollingMachineElement extends UIElement {
 
     player.addEventListener('pointerdown', this.#touchStart, { signal, passive: true });
     player.addEventListener('pointerup', this.#touchEnd, { signal });
-    // Icons morph between states only once a hand has touched the player: nothing animates on first load.
-    const wake = (): void => player.setAttribute('data-awake', '');
-    for (const type of ['pointerdown', 'keydown'] as const) player.addEventListener(type, wake, { signal, capture: true, passive: true, once: true });
   }
 
   override disconnectedCallback(): void {

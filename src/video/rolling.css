@@ -864,9 +864,10 @@
     transition-duration: 50ms;
   }
 
-  /* A new state's icon pops in where the old one fades out. Only once a hand has touched the player, so nothing
-     animates on first load; under reduced motion the swap is instant. */
-  .rolling[data-awake] .rl-key > .rl-icon {
+  /* A new state's icon pops in where the old one fades out, on the key under the hand or the keyboard's focus: so
+     nothing animates on first load, and nothing restyles the whole skin when a hand first touches it (that stalled a
+     flick in WebKit). A hotkey swaps the icon at once; under reduced motion every swap is instant. */
+  .rl-key:is(:hover, :focus-visible) > .rl-icon {
     transition:
       transform 220ms var(--rl-spring),
       opacity 140ms ease-out,
@@ -874,7 +875,7 @@
   }
 
   @starting-style {
-    .rolling[data-awake] .rl-key > .rl-icon {
+    .rl-key:is(:hover, :focus-visible) > .rl-icon {
       opacity: 0;
       transform: scale(0.55) rotate(-24deg);
     }
