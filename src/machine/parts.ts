@@ -1004,15 +1004,22 @@ export function buildMachine(build: Build): Updater[] {
 
     strip.geometry.translate(0, u * 1.3, 0);
     mesh(group, plate(w, hl, KEY, u * 1.5), mats.ivory, 0, 0, -KEY);
-    // A roll of the printing tape on brass cheeks along the key's top edge: what the key feeds from.
-    mesh(group, rod(u * 1.15, w * 0.62, 20), mats.paper, 0, hl / 2 - u * 1.2, 1.2);
+    // A roll of the printing tape on brass cheeks along the key's top edge: what the key feeds from. A printed line
+    // on the roll shows it turning as the tape pays out.
+    const roll = put(group, new Group(), 0, hl / 2 - u * 1.2, 1.2);
+    mesh(roll, rod(u * 1.15, w * 0.62, 20), mats.paper);
+    mesh(roll, new BoxGeometry(w * 0.6, 0.7, 0.5), mats.dark, 0, 0, u * 1.15 - 0.1, false);
     for (const side of [-1, 1]) mesh(group, rod(u * 1.45, 1.2, 20), mats.brassPolished, side * (w * 0.31 + 0.6), hl / 2 - u * 1.2, 1.2);
     mesh(deck, new BoxGeometry(w * 0.64, 1.6, 0.6), mats.dark, at.x, at.y + hl / 2 + 1.2, 0.1, false);
     updaters.push((frame) => {
       const busy = move(feed, frame.state.captions ? 1 : 0, 24, 0.55, frame);
       strip.scale.y = Math.max(0.0001, feed.x);
       strip.visible = feed.x > 0.01;
-      return busy;
+      // The roll turns as far as the tape it pays out, and the fresh strip flutters up off the deck.
+      roll.rotation.x = -feed.x * 2.3;
+      const tCaptions = since(frame, 'captions');
+      strip.rotation.x = Math.abs(ring(tCaptions, 4.5, 4.5)) * 0.45;
+      return busy || tCaptions < ringSpan(4.5);
     });
   }
 
