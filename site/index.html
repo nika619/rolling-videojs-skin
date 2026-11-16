@@ -16,8 +16,55 @@
     <link rel="preconnect" href="https://api.fontshare.com" />
     <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
     <link href="https://api.fontshare.com/v2/css?f[]=switzer@400,500&display=swap" rel="stylesheet" />
+    <script>
+      // Decided before the first paint, so the page never shows under the opening. Once a visit, never under reduced motion.
+      try {
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !location.hash && !sessionStorage.getItem('rolling-intro')) {
+          sessionStorage.setItem('rolling-intro', '1');
+          document.documentElement.classList.add('intro-on');
+        }
+      } catch {}
+    </script>
   </head>
   <body data-edition="walnut">
+    <div class="intro" aria-hidden="true">
+      <div class="intro-word">
+        <video class="intro-lava" src="./film/lava.mp4" poster="./img/lava.webp" muted playsinline loop preload="none"></video>
+        <p class="intro-type"><span style="--i: 0">R</span><span style="--i: 1">o</span><span style="--i: 2">l</span><span style="--i: 3">l</span><span style="--i: 4">i</span><span style="--i: 5">n</span><span style="--i: 6">g</span></p>
+      </div>
+      <span class="intro-marble"></span>
+    </div>
+    <script>
+      // The opening: Kīlauea's lava inside the name; then the room folds into the page's own title.
+      (() => {
+        const root = document.documentElement;
+        if (!root.classList.contains('intro-on')) return;
+        const intro = document.querySelector('.intro');
+        const lava = intro.querySelector('video');
+        lava.preload = 'auto';
+        lava.play().catch(() => {});
+        const go = () => {
+          const word = intro.querySelector('.intro-type');
+          const title = document.querySelector('.hero h1');
+          const a = word.getBoundingClientRect();
+          const b = title.getBoundingClientRect();
+          if (b.bottom > 0 && b.top < innerHeight) {
+            const s = parseFloat(getComputedStyle(title).fontSize) / parseFloat(getComputedStyle(word).fontSize);
+            const right = b.left + a.width * s;
+            intro.style.setProperty('--s', String(s));
+            intro.style.setProperty('--dx', `${b.left - a.left}px`);
+            intro.style.setProperty('--dy', `${b.top - a.top}px`);
+            const below = parseFloat(getComputedStyle(title).fontSize) * 0.18; // room for the g's tail
+            intro.style.setProperty('--clip', `inset(${b.top - 12}px ${innerWidth - right - 28}px ${innerHeight - b.bottom - below}px ${b.left - 12}px round 10px)`);
+          }
+          root.classList.add('intro-go');
+          setTimeout(() => { root.classList.remove('intro-on', 'intro-go'); lava.pause(); lava.removeAttribute('src'); }, 3600);
+        };
+        const ready = () => Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 700))]).then(() => requestAnimationFrame(go));
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);
+        else ready();
+      })();
+    </script>
     <a class="skip" href="#machine">Skip to the design notes</a>
 
     <nav class="bar" aria-label="Page">

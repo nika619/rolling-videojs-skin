@@ -65,6 +65,32 @@ b { font-weight: 500; }
   .bar a { white-space: nowrap; }
 }
 
+/* The opening: the name filled with Kīlauea's lava, letters rising through a mask while the marble rolls under them;
+   then the whole room folds, as a clip, into the page's own title. Pure CSS once started; it hides itself after 4 s regardless. */
+.intro { display: none; }
+.intro-on .intro { display: block; position: fixed; inset: 0; z-index: 50; background: var(--bg); pointer-events: none; clip-path: inset(0); animation: intro-gone 0s 4s forwards; }
+.intro-word { position: absolute; left: 50%; top: 50%; translate: -50% -60%; isolation: isolate; transform-origin: 0 0; }
+.intro-lava { position: absolute; inset: 3px; inline-size: calc(100% - 6px); block-size: calc(100% - 6px); object-fit: cover; filter: brightness(1.9) saturate(1.2); }
+/* Darken keeps the page's ground wherever the film is brighter, so the lava shows only through the letters. */
+.intro-type { position: relative; margin: 0; padding: 0 0.03em 0.2em 0; font: 500 min(27vw, 44svh) / 0.9 var(--sans); letter-spacing: -0.045em; white-space: nowrap; color: #fff; background: var(--bg); mix-blend-mode: darken; overflow: clip; }
+.intro-type span { display: inline-block; translate: 0 130%; }
+.intro-marble { position: absolute; left: 0; top: 50%; translate: -12vw 0; inline-size: clamp(22px, 3.6vw, 52px); aspect-ratio: 1; border-radius: 50%; /* taste-skill-ignore: the steel marble's own shading */ background: radial-gradient(circle at 34% 30%, #fff 0 7%, #dfe3e6 16%, #8a9297 58%, #33383c); opacity: 0; }
+.intro-go .intro { animation: intro-fold 0.85s cubic-bezier(0.7, 0, 0.2, 1) 1.6s forwards, intro-fade 0.3s linear 2.45s forwards, intro-gone 0s 2.8s forwards; }
+.intro-go .intro-word { animation: intro-shrink 0.85s cubic-bezier(0.7, 0, 0.2, 1) 1.6s forwards; }
+.intro-go .intro-type span { animation: intro-rise 0.8s var(--out) calc(var(--i) * 60ms) forwards; }
+.intro-go .intro-marble { top: calc(50% + min(27vw, 44svh) * 0.36); animation: intro-roll 1.35s cubic-bezier(0.45, 0.05, 0.3, 1) 0.3s forwards; }
+/* The words beside the player arrive as the room lets go of the title, never under it. */
+.intro-go .lede, .intro-go .try, .intro-go .film-note { animation: intro-in 0.8s var(--out) 2.5s both; }
+.intro-go .try { animation-delay: 2.6s; }
+.intro-go .film-note { animation-delay: 2.7s; }
+@keyframes intro-rise { to { translate: 0 0; } }
+@keyframes intro-roll { from { opacity: 1; } to { opacity: 1; translate: 112vw 0; } }
+@keyframes intro-fold { to { clip-path: var(--clip, inset(50% 50% 50% 50% round 10px)); } }
+@keyframes intro-shrink { to { transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(var(--s, 0.2)); } }
+@keyframes intro-fade { to { opacity: 0; } }
+@keyframes intro-gone { to { visibility: hidden; } }
+@keyframes intro-in { from { opacity: 0; translate: 0 18px; filter: blur(6px); } }
+
 /* First screen: the player, lit by its own film, with the title beside it (below it on narrow screens). */
 .hero {
   --pw: min(100vw - 2 * var(--m), 1180px);
@@ -74,7 +100,7 @@ b { font-weight: 500; }
   gap: 0;
   padding: 8px var(--m) 0;
 }
-.hero h1 { font-size: clamp(4rem, 2rem + 9vw, 6rem); line-height: 0.9; letter-spacing: -0.045em; }
+.hero h1 { font-size: clamp(4rem, 2rem + 9vw, 6rem); font-weight: 500; line-height: 0.9; letter-spacing: -0.045em; }
 .lede { margin-top: 16px; max-width: 34ch; line-height: 1.4; }
 .hero-player { position: relative; margin-top: 28px; }
 .player { position: relative; border-radius: 14px; }
