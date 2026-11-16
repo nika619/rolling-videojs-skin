@@ -95,12 +95,12 @@ function buildTour() {
 const REST = [
   { shot: 'loading', at: [1500, 330], k: 0.8, name: 'Sleepers', means: 'Loading', f0: 0 },
   { shot: 'cast', at: [4630, 728], k: 1.05, name: 'Catapult', means: 'Cast', f0: 0 },
-  { shot: 'tray', at: [1650, 1000], k: 0.55, name: 'Tray', means: 'Error: “Put it back”', f0: 0 },
+  { shot: 'tray', at: [1650, 928], k: 0.42, name: 'Wooden tray', means: 'Error', f0: 0 },
 ];
 function buildRest() {
   const row = $('#rest-row');
   REST.forEach((r, i) => {
-    row.insertAdjacentHTML('beforeend', `<div class="mini" style="left:${400 + i * 560 - 220}px;top:330px"><div class="in"><img alt="" /></div><h3 class="split">${r.name}<span>${r.means}</span></h3></div>`);
+    row.insertAdjacentHTML('beforeend', `<div class="mini" style="left:${400 + i * 560 - 220}px;top:390px"><div class="in"><img alt="" /></div><h3 class="split">${r.name}<span>${r.means}</span></h3></div>`);
   });
 }
 
@@ -180,7 +180,8 @@ async function init() {
 /** Draw the lava word: letters rise through a band mask, the lava runs inside them, a brass rail draws under. */
 function drawLava(t, o) {
   lctx.clearRect(0, 0, 1920, 1080);
-  if (o.alpha <= 0) return;
+  const y = o.y + FS * 0.36 * o.s, x0 = 960 - (wordW / 2) * o.s, x1 = 960 + (wordW / 2) * o.s;
+  if (o.alpha <= 0) return { x0, x1, y };
   const idx = Math.floor(t * FPS) % 190;
   show(lavaImg, `${ASSET}lava/f${pad((idx < 96 ? idx : 190 - idx) + 1)}.jpg`);
   mctx.clearRect(0, 0, 1920, 1080);
@@ -206,7 +207,6 @@ function drawLava(t, o) {
   lctx.drawImage(mask, 0, 0);
   lctx.globalCompositeOperation = 'source-over';
   // The rail the marble rolls on, drawn in from the left.
-  const y = o.y + FS * 0.36 * o.s, x0 = 960 - (wordW / 2) * o.s, x1 = 960 + (wordW / 2) * o.s;
   if (o.rail > 0) {
     lctx.strokeStyle = '#e2b45a';
     lctx.lineWidth = 3;
@@ -403,8 +403,8 @@ function update(t) {
     const hitT = cur.s + (cur.a.hit - cur.a.from) / FPS;
     const px = (cur.a.at[0] - cur.left) * k, py = cur.a.at[1] * k - (910 * k - 500) / 2;
     $('#ripples').innerHTML = [0, 0.12, 0.24].map((d) => {
-      const p = seg(t, hitT + d, hitT + d + 1.0);
-      return p > 0 && p < 1 ? `<circle cx="${px}" cy="${py}" r="${20 + 520 * out3(p)}" stroke-width="${4 * (1 - p) + 0.5}" stroke-opacity="${0.85 * (1 - p)}"/>` : '';
+      const p = seg(t, hitT + d, hitT + d + 1.25);
+      return p > 0 && p < 1 ? `<circle cx="${px}" cy="${py}" r="${24 + 470 * out3(p)}" stroke-width="${7 * (1 - p) + 1}" stroke-opacity="${(1 - p) ** 1.3}"/>` : '';
     }).join('');
     [...document.querySelectorAll('#alive-notes .note')].forEach((el, i) => {
       const s = a0 + 0.3 + i * part;
