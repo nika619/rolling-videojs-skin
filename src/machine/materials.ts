@@ -643,8 +643,18 @@ export class Materials {
     // Ring frequency, pores, figure contrast, roughness.
     const grain: Record<WoodKind, [Color, Color, Color, number, number, number, number, number]> = {
       deck: [woodLight, wood, woodDeep, 0.085, light ? 0.18 : 0.5, 0.75, 0.46, 1.1],
-      // A darker board under the rail in maple too, so the rail stands out; its varnish mirrors the film softly.
-      floor: [light ? mix(wood, woodDeep, 0.5) : wood, mix(wood, woodDeep, light ? 0.85 : 0.6), mix(woodDeep, new Color(0), 0.35), 0.07, light ? 0.2 : 0.55, 0.7, 0.3, 1.6],
+      // A darker board under the rail; in maple a walnut tray in the maple case, as two-tone furniture has, so the
+      // pale boxwood beam and its rods stand clear of it. Its varnish mirrors the film softly.
+      floor: [
+        light ? srgb(0x7a5232) : wood,
+        light ? srgb(0x51331d) : mix(wood, woodDeep, 0.6),
+        light ? srgb(0x2c1a0d) : mix(woodDeep, new Color(0), 0.35),
+        0.07,
+        light ? 0.3 : 0.55,
+        0.7,
+        0.3,
+        light ? 0.8 : 1.6,
+      ],
       lip: [mix(woodLight, wood, 0.4), mix(wood, woodDeep, 0.3), woodDeep, 0.1, light ? 0.18 : 0.5, 0.7, 0.44, 1.4],
       // Boxwood, as a rule is made of: a close, pale figure that still reads as grain under the burned ticks.
       beam: [mix(beam, new Color(1, 1, 1), 0.14), beam, mix(beam, srgb(0x6b4a1c), 0.64), 0.13, 0.22, 0.88, 0.38, 0.75],
