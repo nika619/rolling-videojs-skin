@@ -337,7 +337,9 @@ export function buildMachine(build: Build): Updater[] {
       // Seek: where the marble lands, a splash spreads both ways along the track.
       const tSeek = since(frame, 'seek');
       const landing = (frame.impulses.get('seek')?.x ?? 0) * (count - 1);
-      const rippling = tPlay < 1.6 || tSeek < 0.9;
+      // End: the board answers the bell, a wave running back along the track toward the ladder.
+      const tEnd = since(frame, 'end') - 0.25;
+      const rippling = tPlay < 1.6 || tSeek < 0.9 || tEnd < (length + 60) / 560;
 
       for (let i = 0; i < count; i++) {
         const target = i / Math.max(1, count - 1) <= laid.front + 0.0005 ? 1 : 0;
@@ -368,6 +370,7 @@ export function buildMachine(build: Build): Updater[] {
           const away = Math.abs(i - landing) * gap;
           lift += 2.4 * wave(tSeek, away, 420, 14) * Math.exp(-away / 220);
         }
+        if (tEnd < (length + 60) / 560) lift += 2.6 * wave(tEnd, (count - 1 - i) * gap, 560, 18);
         dummy.position.set(-length + i * gap, top + shape.sleeper / 2 + (1 - a) * 5 + laid.give[i]!.x + lift, 0);
         dummy.rotation.set((1 - a) * 1.6, 0, lift * 0.05);
         dummy.scale.setScalar(Math.max(a, 0.0001));
@@ -596,7 +599,10 @@ export function buildMachine(build: Build): Updater[] {
       ball.visible = true;
       ball.scale.setScalar(1 + 0.07 * motion.grab.x);
       mats.bulge.size.value = 0;
-      bell.rotation.x = 0;
+      // End: the bell rocks on its bracket as it rings.
+      const tEnd = since(frame, 'end') - 0.3;
+      bell.rotation.x = ring(tEnd, 2.4, 2.2) * 0.08;
+      busy ||= tEnd < ringSpan(2.2);
 
       if (replay.t >= 0) {
         replay.t += frame.dt;
@@ -693,11 +699,13 @@ export function buildMachine(build: Build): Updater[] {
       }
       swings.x = x;
       swings.started = frame.state.started;
+      const tEnd = since(frame, 'end') - 0.2;
       bars.forEach((bar, index) => {
         busy = move(swings.at[index]!, 0, 13, 0.07, frame) || busy;
-        bar.rotation.z = swings.at[index]!.x;
+        // End: every chime shimmers, one after another from the bell back to the start.
+        bar.rotation.z = swings.at[index]!.x + ring(tEnd - (bars.length - 1 - index) * 0.07, 2.8, 1.8) * 0.2;
       });
-      return busy;
+      return busy || tEnd < bars.length * 0.07 + ringSpan(1.8);
     });
 
     // The film's length, engraved on a plate at the end of the rail.
