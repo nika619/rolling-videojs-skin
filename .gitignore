@@ -16,6 +16,7 @@ playwright-report/
 .vercel
 .netlify
 .wrangler
+.env*
 
 # Local agent guides from the scaffold
 CLAUDE.md
