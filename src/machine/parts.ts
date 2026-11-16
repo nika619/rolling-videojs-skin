@@ -1156,11 +1156,18 @@ export function buildMachine(build: Build): Updater[] {
     mesh(deck, new TorusGeometry(u * 0.8, 1, 8, 16), mats.brassPolished, at.x, eyeletY, 2, false);
     updaters.push((frame) => {
       const busy = move(tug, frame.pressed === 'cord' ? 1 : 0, 32, 0.32, frame);
-      const top = at.y + hl / 2 - 3 - tug.x * alongSlope(4);
-      bead.position.y = at.y - tug.x * alongSlope(4);
-      cord.position.y = top;
-      cord.scale.y = Math.max(0.01, eyeletY - top);
-      return busy;
+      // After the tug the bead swings on its cord like a pendulum from the eyelet, and slowly comes to rest.
+      const tSwing = Math.min(since(frame, 'cord'), since(frame, 'fullscreen')) - 0.1;
+      const theta = ring(tSwing, 1.3, 1.6) * 0.32;
+      const drop = tug.x * alongSlope(4);
+      const reach = eyeletY - (at.y - drop);
+      const length = Math.max(0.01, eyeletY - (at.y + hl / 2 - 3 - drop));
+      bead.position.set(at.x + Math.sin(theta) * reach, eyeletY - Math.cos(theta) * reach, 0);
+      bead.rotation.z = theta;
+      cord.position.set(at.x + Math.sin(theta) * length, eyeletY - Math.cos(theta) * length, half * 0.3);
+      cord.rotation.z = theta;
+      cord.scale.y = length;
+      return busy || tSwing < ringSpan(1.6);
     });
   }
 
