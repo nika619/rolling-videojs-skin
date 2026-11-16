@@ -339,7 +339,10 @@ export function buildMachine(build: Build): Updater[] {
       const landing = (frame.impulses.get('seek')?.x ?? 0) * (count - 1);
       // End: the board answers the bell, a wave running back along the track toward the ladder.
       const tEnd = since(frame, 'end') - 0.25;
-      const rippling = tPlay < 1.6 || tSeek < 0.9 || tEnd < (length + 60) / 560;
+      // Waiting: the next few sleepers ahead of the marble pulse one after another, a chase toward where it must go.
+      const tWait = since(frame, 'wait');
+      const waiting = frame.state.waiting && tWait < Number.POSITIVE_INFINITY;
+      const rippling = tPlay < 1.6 || tSeek < 0.9 || tEnd < (length + 60) / 560 || waiting;
 
       for (let i = 0; i < count; i++) {
         const target = i / Math.max(1, count - 1) <= laid.front + 0.0005 ? 1 : 0;
@@ -371,6 +374,7 @@ export function buildMachine(build: Build): Updater[] {
           lift += 2.4 * wave(tSeek, away, 420, 14) * Math.exp(-away / 220);
         }
         if (tEnd < (length + 60) / 560) lift += 2.6 * wave(tEnd, (count - 1 - i) * gap, 560, 18);
+        if (waiting && ahead > 0 && ahead < gap * 6.5) lift += 1.8 * Math.max(0, Math.sin(tWait * 7 - (ahead / gap) * 0.9)) * (1 - ahead / (gap * 7));
         dummy.position.set(-length + i * gap, top + shape.sleeper / 2 + (1 - a) * 5 + laid.give[i]!.x + lift, 0);
         dummy.rotation.set((1 - a) * 1.6, 0, lift * 0.05);
         dummy.scale.setScalar(Math.max(a, 0.0001));
@@ -646,7 +650,12 @@ export function buildMachine(build: Build): Updater[] {
         const rocking = ring(tRate, 1.7, 3.2) * r * 0.35 * (frame.impulses.get('rate')?.strength ?? 0);
         busy ||= tSkip < 0.26 + ringSpan(9) || tRate < ringSpan(3.2);
         ball.position.set(railX + rocking + (bowlRest.x - 0) * ease(clamp(d * 1.5, 0, 1)), ride + motion.grab.x * 1.5 + hop + (bowlRest.y - ride) * ease(clamp(d * 1.5 - 0.3, 0, 1.2)), 0);
-        ball.rotation.z = -marble.turn + wobble - rocking / r;
+        // Waiting: the marble spins in place against the pin, straining to go on.
+        if (frame.state.waiting && since(frame, 'wait') < Number.POSITIVE_INFINITY) {
+          motion.spin += frame.dt * 9;
+          busy = true;
+        }
+        ball.rotation.z = -marble.turn + wobble - rocking / r - motion.spin;
       }
 
       // Pause: a brass pin comes up just ahead of the marble. On play it drops back into the beam with a bounce.
