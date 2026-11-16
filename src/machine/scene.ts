@@ -22,6 +22,7 @@ import {
   SRGBColorSpace,
   VideoTexture,
   WebGLRenderer,
+  type WebGLRenderTarget,
 } from 'three';
 
 import { type Activity, FRAME_WINDOW, frameGap, nextQuality, PIXEL_RATIO_CAP, PLAYBACK_FRAME_MS, type Quality } from './gate';
@@ -127,18 +128,22 @@ export function mount(options: MountOptions): Machine {
   const zones = [new PointLight(0xffffff, 1, 0, 2), new PointLight(0xffffff, 1, 0, 2), new PointLight(0xffffff, 1, 0, 2)];
   scene.add(world, key, key.target, fill, fill.target, ...zones);
 
-  const pmrem = new PMREMGenerator(renderer);
-  const room = studio();
-  const environment = pmrem.fromScene(room, 0.07);
-  scene.environment = environment.texture;
-  scene.environmentIntensity = 0.72;
-  room.traverse((object) => {
-    if (object instanceof Mesh) {
-      object.geometry.dispose();
-      object.material.dispose();
-    }
-  });
-  pmrem.dispose();
+  let environment: WebGLRenderTarget | null = null;
+  /** The studio the metals mirror. It compiles and draws, so it runs in a task of its own. */
+  const lightRoom = (): void => {
+    const pmrem = new PMREMGenerator(renderer);
+    const room = studio();
+    environment = pmrem.fromScene(room, 0.07);
+    scene.environment = environment.texture;
+    scene.environmentIntensity = 0.72;
+    room.traverse((object) => {
+      if (object instanceof Mesh) {
+        object.geometry.dispose();
+        object.material.dispose();
+      }
+    });
+    pmrem.dispose();
+  };
 
   const stats: MachineStats = { quality: options.quality, frames: 0, fps: 0, drawMs: 0, worstMs: 0, triangles: 0, calls: 0, builds: 0, impulses: {} };
   let quality: Quality = options.quality;
@@ -542,16 +547,26 @@ export function mount(options: MountOptions): Machine {
     { signal }
   );
 
-  // Every shader is compiled before the first frame, off the main thread where the browser can
-  // (KHR_parallel_shader_compile): compiled on first draw, a cold start blocked the page for about four seconds.
-  // The flat skin stays until the machine is ready. The extras for the high tier follow once it is out.
-  rebuild();
-  void renderer.compileAsync(scene, camera).then(() => {
-    if (disposed) return;
-    compiled = true;
-    request();
-    wake = window.setTimeout(loadPost, 300);
-  });
+  // Each heavy step runs in a task of its own (the context above, then the studio, then the parts), so the page is
+  // never blocked for long; then every shader is compiled before the first frame, off the main thread where the
+  // browser can (KHR_parallel_shader_compile). Compiled on first draw, a cold start blocked the page for about four
+  // seconds; in one task, for about 1.7. The flat skin stays until the machine is ready; the high tier's extras follow.
+  const nextTask = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
+  void nextTask()
+    .then(() => {
+      if (!disposed) lightRoom();
+      return nextTask();
+    })
+    .then(() => {
+      if (disposed) return;
+      rebuild();
+      return renderer.compileAsync(scene, camera).then(() => {
+        if (disposed) return;
+        compiled = true;
+        request();
+        wake = window.setTimeout(loadPost, 300);
+      });
+    });
 
   return {
     stats,
@@ -594,7 +609,7 @@ export function mount(options: MountOptions): Machine {
       post?.dispose();
       videoTexture?.dispose();
       key.shadow.map?.dispose();
-      environment.dispose();
+      environment?.dispose();
       materials.dispose();
       renderer.dispose();
       canvas.remove();

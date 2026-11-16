@@ -17,6 +17,30 @@ interface Probe extends Device {
 
 let probed: Probe | undefined;
 
+/**
+ * Resolves once the film has its first frame (or 2.5 s have passed) and the page has painted and gone idle. Creating
+ * a WebGL context waits on the GPU process, which is busy while the page and the player start up: mounted straight
+ * away, that wait blocked the page for well over a second on a cold start.
+ */
+function whenSettled(media: HTMLVideoElement | null): Promise<void> {
+  const loaded = new Promise<void>((resolve) => {
+    if (!media || media.readyState >= 2) return resolve();
+    media.addEventListener('loadeddata', () => resolve(), { once: true });
+    setTimeout(resolve, 2500);
+  });
+  return loaded.then(
+    () =>
+      new Promise((resolve) => {
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            if ('requestIdleCallback' in window) requestIdleCallback(() => resolve(), { timeout: 1000 });
+            else setTimeout(resolve, 100);
+          })
+        );
+      })
+  );
+}
+
 /** Is WebGL 2 there, and what draws it? Asked once per page, on a context that is given straight back. */
 function probe(): Probe {
   if (probed) return probed;
@@ -203,7 +227,8 @@ export class RollingMachineElement extends UIElement {
     if (this.#machine || this.#mounting || !player || !dock) return;
 
     this.#mounting = true;
-    void import('./scene')
+    void whenSettled(videoOf(player.firstElementChild))
+      .then(() => import('./scene'))
       .then(({ mount }) => {
         this.#mounting = false;
         if (!this.isConnected || this.#failed || this.#quality === 'flat' || this.#machine) return;
